@@ -4,6 +4,6 @@ A free, beginner-friendly course for building an AI agent from zero, in English,
 
 Open the course: https://wangden-sherpa.github.io/build-your-own-ai-agent/
 
-- 22 lessons: Python basics, OOP, tools, memory, the agent loop, the Claude API, LangChain, LangGraph, Deep Agents, safety and a final project
+- 33 lessons in 5 levels: beginner Python and OOP, your first agent, LangChain/LangGraph/Deep Agents, making agents smart (prompts, reliable tools, RAG, memory, reflection), and 6 real-world projects
 - Practice Python right in the browser (Pyodide)
-- Glossary, resources and custom backgrounds
+- Animated vector drawings for every lesson, glossary, resources and custom backgrounds
