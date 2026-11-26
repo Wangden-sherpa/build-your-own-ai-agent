@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Your Own AI Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+SC:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* VOICE: patient teacher, calm and clear, for total beginners
+   IDEA: an architect's workbook — each lesson a drawn plate you build line by line
+   PICTURE: a 3D drawing of the agent: You → Brain → Tools → Memory, in a loop
+   COLOUR and TYPE: white, black, concrete planes, one safety-yellow accent; Hanken Grotesk + Noto for नेपाली / 中文
+   LAYOUT: modest title, big drawing, then a lesson list and one lesson at a time */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#1a1a19);--ink:light-dark(#141414,#ecebe6);--mut:light-dark(#5b5b57,#a7a6a0);--con:light-dark(#d8d8d4,#2b2b29);--con2:light-dark(#ececea,#232322);--line:light-dark(#141414,#ecebe6);--acc:#ffe600;--ok:light-dark(#0b6b2e,#7ee09c);--bad:light-dark(#b3141b,#ff8a8a);--code:light-dark(#f4f4f1,#121211)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Hanken Grotesk","Noto Sans Devanagari","Noto Sans SC",system-ui,sans-serif;overflow-x:clip}
+:lang(ne) body,html[lang=ne] body{line-height:1.75}
+a{color:inherit}
+.band{padding:clamp(24px,4vw,56px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere}html{scroll-padding-top:80px}
+code,pre,textarea.code{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:2px solid var(--line)}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;padding:10px max(5vw,16px)}
+.brand{font-weight:700;font-size:17px;display:flex;align-items:center;gap:10px}
+.brand i{display:inline-block;width:18px;height:18px;background:var(--acc);border:2px solid #141414}
+.langs{display:flex;gap:6px}
+button{font:inherit;color:inherit;cursor:pointer}
+.chip{min-height:44px;padding:0 14px;border:2px solid var(--line);background:transparent;font-weight:600;font-size:15px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.chip:focus-visible,.btn:focus-visible,textarea:focus-visible,input:focus-visible,.nav a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.prog{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--mut)}
+.prog .track{width:120px;height:10px;background:var(--con);position:relative}
+.prog .fill{position:absolute;inset:0 auto 0 0;background:var(--ink);width:0}
+.hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(20px,4vw,56px);align-items:center;background:var(--con2)}
+.hero h1{font-size:clamp(34px,5vw,52px);line-height:1.05;margin:0 0 16px;text-wrap:balance;font-weight:700}
+.hero p{margin:0 0 14px;max-width:62ch}
+.note{font-size:14px;color:var(--mut);border-left:3px solid var(--acc);padding-left:12px}
+.fig{position:relative;min-height:340px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--line);padding:0 max(5vw,16px);flex-wrap:wrap}
+.tabs a{min-height:48px;display:flex;align-items:center;padding:0 18px;text-decoration:none;font-weight:600;border-bottom:4px solid transparent;margin-bottom:-2px}
+.tabs a[aria-current=page]{border-bottom-color:var(--acc);background:var(--con2)}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:40px;align-items:start}
+.nav{position:sticky;top:90px;display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 110px);overflow:auto}
+.nav a{display:grid;grid-template-columns:34px minmax(0,1fr) 18px;gap:8px;align-items:center;padding:9px 10px;text-decoration:none;font-size:15px;border-left:3px solid transparent}
+.nav a b{font-variant-numeric:tabular-nums;color:var(--mut)}
+.nav a[aria-current=true]{border-left-color:var(--ink);background:var(--con2);font-weight:600}
+.nav a .dot{width:12px;height:12px;border:2px solid var(--mut)}
+.nav a .dot.full{background:var(--acc);border-color:#141414}
+h2{font-size:clamp(28px,3.4vw,38px);line-height:1.1;margin:0 0 8px;text-wrap:balance}
+.lead{color:var(--mut);margin:0 0 28px;max-width:68ch}
+.step{border-top:2px solid var(--line);padding:24px 0 30px}
+.step h3{font-size:22px;margin:0 0 10px;line-height:1.25;display:flex;gap:12px;align-items:baseline}
+.step h3 span.n{flex:none;background:var(--acc);color:#141414;font-size:15px;padding:2px 9px;font-weight:700}
+.step h3 .ok{font-size:14px;color:var(--ok);font-weight:600;margin-left:auto;flex:none}
+.x{max-width:72ch}.x p{margin:0 0 12px}.x code{background:var(--code);padding:1px 5px;font-size:.92em}
+.x ul{margin:0 0 12px;padding-left:22px}.x li{margin-bottom:6px}
+.box{border:2px solid var(--line);margin-top:16px}
+.boxhead{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;background:var(--con);font-size:14px;font-weight:600;flex-wrap:wrap}
+pre.src{margin:0;padding:14px 16px;background:var(--code);font-size:15px;line-height:1.6;tab-size:4}
+pre.src .s{color:light-dark(#8a4b00,#ffd27a)}pre.src .c{color:var(--mut);font-style:italic}
+.small{min-height:36px;padding:0 12px;border:2px solid var(--line);background:var(--bg);font-size:14px;font-weight:600}
+textarea.code{width:100%;min-height:110px;padding:12px 14px;font-size:16px;line-height:1.6;border:0;border-top:2px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical;tab-size:4;display:block}
+.btns{display:flex;flex-wrap:wrap;gap:8px;padding:10px;border-top:2px solid var(--line);background:var(--con2)}
+.btn{min-height:44px;padding:0 18px;border:2px solid var(--line);background:var(--bg);font-weight:700;font-size:15px}
+.btn.pri{background:var(--acc);color:#141414;border-color:#141414}
+.fb{padding:0 12px;font-size:15px}.fb:not(:empty){padding:10px 12px;border-top:2px solid var(--line)}
+.fb.good{color:var(--ok)}.fb.bad{color:var(--bad)}
+.fb pre{margin:6px 0 0;padding:8px;background:var(--code);color:var(--ink);font-size:14px}
+pre.out{margin:0;padding:12px 14px;background:#141414;color:#e9f5d6;font-size:15px;min-height:0;white-space:pre-wrap}
+pre.out:empty{display:none}
+pre.out .e{color:#ff9d9d}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:20px;flex-wrap:wrap}
+.pre{margin:0 0 18px}.pre summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px}
+.gl article{border:2px solid var(--line);padding:16px}
+.gl h3{margin:0 0 6px;font-size:19px}.gl .alt{font-size:14px;color:var(--mut);margin:0 0 8px}
+.gl p{margin:0;font-size:16px}
+input.search{width:100%;max-width:520px;min-height:48px;padding:0 14px;font-size:16px;border:2px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:20px}
+.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:16px}
+.res a{display:block;border:2px solid var(--line);padding:16px;text-decoration:none}
+.res a:hover{background:var(--con2)}.res b{display:block;font-size:18px}.res small{color:var(--mut);display:block;margin:2px 0 8px;overflow-wrap:anywhere}
+.res h3{grid-column:1/-1;margin:16px 0 0;font-size:20px}
+footer{border-top:2px solid var(--line);font-size:14px;color:var(--mut)}
+[hidden]{display:none!important}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}.nav{position:static;max-height:none;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:6px}.nav a{flex:none;grid-template-columns:auto auto 14px;border:2px solid var(--con)}.nav a span.t{display:none}.nav a[aria-current=true] span.t{display:inline}}
+@media(max-width:700px){.hero{grid-template-columns:minmax(0,1fr)}.fig{min-height:260px}.prog .track{width:70px}}
+/* backgrounds */
+#bgLayer{position:fixed;inset:0;z-index:-1;background-size:cover;background-position:center;background-repeat:no-repeat}
+html{--veilp:88%}
+html.has-bg body{background:transparent}
+html.has-bg header,html.has-bg .tabs,html.has-bg footer{background:color-mix(in srgb,var(--bg) var(--veilp),transparent);backdrop-filter:blur(8px)}
+html.has-bg .hero{background:color-mix(in srgb,var(--con2) var(--veilp),transparent);backdrop-filter:blur(8px)}
+html.has-bg main>.wrap{background:color-mix(in srgb,var(--bg) var(--veilp),transparent);backdrop-filter:blur(8px);padding:clamp(16px,3vw,36px);border:2px solid var(--line)}
+.tools-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#bgPanel{position:fixed;z-index:20;top:70px;right:max(2vw,8px);width:min(440px,96vw);max-height:calc(100vh - 90px);overflow:auto;background:var(--bg);border:2px solid var(--line);box-shadow:8px 8px 0 var(--con);padding:18px}
+#bgPanel h2{font-size:24px;margin:0 0 4px}#bgPanel p{margin:0 0 14px;font-size:15px;color:var(--mut)}
+.sw{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.sw button{border:2px solid var(--line);background:var(--bg);padding:0;text-align:start;font-size:13px;font-weight:600}
+.sw button i{display:block;height:64px;background-size:cover;background-position:center;border-bottom:2px solid var(--line)}
+.sw button span{display:block;padding:6px 8px;min-height:34px}
+.sw button[aria-pressed=true]{outline:4px solid var(--acc);outline-offset:1px}
+.field{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 14px;font-size:15px;font-weight:600}
+.field input[type=color]{width:56px;height:44px;border:2px solid var(--line);padding:2px;background:var(--bg)}
+.field input[type=range]{flex:1;min-width:140px;accent-color:#141414}
+.field input[type=file]{font-size:14px;max-width:100%}
+.nav .trackhead{font-size:13px;font-weight:700;padding:14px 10px 4px;color:var(--mut);border-top:2px solid var(--line);margin-top:8px}
+@media(max-width:900px){.nav .trackhead{flex:none;border:0;margin:0;padding:12px 6px;align-self:center}}
+.tag{display:inline-block;background:var(--ink);color:var(--bg);font-size:13px;font-weight:700;padding:2px 8px;margin-bottom:10px}
+@media(prefers-reduced-motion:no-preference){.flow{stroke-dasharray:8 8;animation:dash 1.4s linear infinite}@keyframes dash{to{stroke-dashoffset:-32}}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand"><i></i><span data-ui="brand"></span></div>
+  <div class="prog"><span data-ui="progress"></span><div class="track"><div class="fill" id="pfill"></div></div><span id="ptxt">0%</span></div>
+  <div class="langs" role="group" aria-label="Language">
+    <button class="chip" data-lang="en">English</button>
+    <button class="chip" data-lang="ne">नेपाली</button>
+    <button class="chip" data-lang="zh">中文</button>
+    <button class="chip" id="bgBtn" aria-expanded="false" aria-controls="bgPanel" data-ui="bgBtn"></button>
+  </div>
+</div></header>
+<div id="bgLayer" aria-hidden="true"></div>
+<section id="bgPanel" hidden aria-labelledby="bgTitle">
+  <h2 id="bgTitle" data-ui="bgTitle"></h2>
+  <p data-ui="bgHelp"></p>
+  <div class="sw" id="swatches"></div>
+  <label class="field"><span data-ui="bgColor"></span><input type="color" id="bgColor" value="#2a9d8f"></label>
+  <label class="field"><span data-ui="bgImage"></span><input type="file" id="bgFile" accept="image/*"></label>
+  <label class="field"><span data-ui="bgVeil"></span><input type="range" id="bgVeil" min="55" max="98" value="88"></label>
+  <p id="bgMsg" role="status"></p>
+  <div class="tools-row"><button class="btn" id="bgReset" data-ui="bgReset"></button><button class="btn pri" id="bgClose" data-ui="bgClose"></button></div>
+</section>
+
+<section class="band hero"><div>
+  <h1 data-ui="h1"></h1>
+  <p data-ui="intro"></p>
+  <p class="note" data-ui="note"></p>
+</div><div class="fig" id="fig"><svg id="hero" viewBox="0 0 640 400" role="img" aria-label="AI agent diagram"></svg></div></section>
+
+<nav class="tabs" aria-label="Sections">
+  <a href="#lesson-0" data-tab="lesson" data-ui="tabLessons"></a>
+  <a href="#playground" data-tab="playground" data-ui="tabPlay"></a>
+  <a href="#glossary" data-tab="glossary" data-ui="tabGloss"></a>
+  <a href="#resources" data-tab="resources" data-ui="tabRes"></a>
+</nav>
+
+<main class="band"><div class="wrap">
+  <div id="v-lesson" class="layout"><nav class="nav" id="nav" aria-label="Lessons"></nav><div id="lesson"></div></div>
+  <div id="v-playground" hidden></div>
+  <div id="v-glossary" hidden></div>
+  <div id="v-resources" hidden></div>
+</div></main>
+<footer class="band"><div class="wrap" data-ui="foot"></div></footer>
+
+<script>
+{
+/* ---------- text helpers ---------- */
+const T=(en,ne,zh)=>({en,ne,zh});
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const store={get(k){try{return JSON.parse(localStorage.getItem('agentschool.'+k))}catch(e){return null}},set(k,v){try{localStorage.setItem('agentschool.'+k,JSON.stringify(v))}catch(e){}}};
+let lang=store.get('lang')||'en';
+const L=o=>o==null?'':(typeof o==='string'?o:(o[lang]||o.en));
+
+const UI={
+brand:T('Agent School','एजेन्ट स्कुल','智能体学校'),
+progress:T('Progress','प्रगति','进度'),
+h1:T('Build your own AI agent, one line at a time','आफ्नै AI एजेन्ट बनाउनुहोस्, एक-एक लाइन गर्दै','一行一行，亲手做出你自己的AI智能体'),
+intro:T('No coding experience needed. Read the simple explanation, type each line of code yourself, press Check, then Run it. Real Python runs right here in your browser, so you can practise without installing anything.',
+'कोडिङको कुनै अनुभव चाहिँदैन। सजिलो व्याख्या पढ्नुहोस्, कोडको हरेक लाइन आफैँ टाइप गर्नुहोस्, "जाँच्नुहोस्" थिच्नुहोस्, अनि "चलाउनुहोस्" थिच्नुहोस्। साँचो Python यही ब्राउजरमा चल्छ, त्यसैले केही इन्स्टल नगरी अभ्यास गर्न सक्नुहुन्छ।',
+'不需要任何编程经验。先读简单的解释，再亲手输入每一行代码，点击"检查"，然后点击"运行"。真正的Python就在你的浏览器里运行，不用安装任何东西就能练习。'),
+note:T('Your progress is saved in this browser. Every hard word is explained in the Glossary tab.','तपाईंको प्रगति यही ब्राउजरमा सुरक्षित हुन्छ। हरेक गाह्रो शब्दको अर्थ "शब्दकोश" ट्याबमा छ।','你的进度会保存在这个浏览器里。所有难懂的词都在"词汇表"里有解释。'),
+tabLessons:T('Lessons','पाठहरू','课程'),tabPlay:T('Playground','अभ्यास मैदान','练习场'),tabGloss:T('Glossary','शब्दकोश','词汇表'),tabRes:T('Resources','स्रोतहरू','学习资源'),
+lesson:T('Lesson','पाठ','第'),lessonSuf:T('','',' 课'),
+code:T('Code to learn','सिक्ने कोड','要学习的代码'),
+type:T('Your turn: type it yourself (do not copy-paste, typing helps you remember)','अब तपाईंको पालो: आफैँ टाइप गर्नुहोस् (कपी-पेस्ट नगर्नुहोस्, टाइप गर्दा राम्ररी याद हुन्छ)','轮到你了：亲手输入（不要复制粘贴，自己打字记得更牢）'),
+check:T('Check','जाँच्नुहोस्','检查'),run:T('Run','चलाउनुहोस्','运行'),answer:T('Show answer','उत्तर देखाउनुहोस्','显示答案'),copy:T('Copy','कपी','复制'),copied:T('Copied','कपी भयो','已复制'),
+empty:T('The box is empty. Type the code first.','बाकस खाली छ। पहिले कोड टाइप गर्नुहोस्।','输入框是空的，请先输入代码。'),
+right:T('Correct! Well done. Now press Run to see what it does.','सही! धेरै राम्रो। अब के हुन्छ हेर्न "चलाउनुहोस्" थिच्नुहोस्।','正确！做得好。现在点击"运行"看看结果。'),
+wrongLine:T('Almost! Look at line','लगभग मिल्यो! यो लाइन हेर्नुहोस्:','差一点！请看第'),
+wrongLineSuf:T('','','行'),
+expected:T('It should be:','हुनुपर्ने:','应该是：'),you:T('You typed:','तपाईंले टाइप गर्नुभयो:','你输入的是：'),
+missing:T('(this line is missing)','(यो लाइन छुटेको छ)','（缺少这一行）'),
+extra:T('You have extra lines at the end.','अन्त्यमा थप लाइनहरू छन्।','末尾多了几行。'),
+spaces:T('Tip: count the spaces at the start of the line. Python uses 4 spaces to show what belongs inside.','सुझाव: लाइनको सुरुमा कति खाली ठाउँ (space) छ गन्नुहोस्। भित्र पर्ने कुरा देखाउन Python ले ४ वटा space प्रयोग गर्छ।','提示：数一数行首的空格。Python用4个空格表示"属于里面的内容"。'),
+loading:T('Starting Python in your browser (first time takes about 10–20 seconds)…','तपाईंको ब्राउजरमा Python सुरु हुँदैछ (पहिलो पटक १०–२० सेकेन्ड लाग्छ)…','正在浏览器中启动Python（第一次大约需要10–20秒）…'),
+noPy:T('Python could not start here (maybe no internet). Here is what the code prints:','यहाँ Python सुरु हुन सकेन (सायद इन्टरनेट छैन)। यो कोडले यस्तो देखाउँछ:','这里无法启动Python（可能没有网络）。这段代码会输出：'),
+noOut:T('(The code ran but printed nothing.)','(कोड चल्यो तर केही देखाएन।)','（代码运行了，但没有输出任何内容。）'),
+errHead:T('Error. Do not worry, every programmer sees errors every day. Read the hint:','त्रुटि (Error)। चिन्ता नगर्नुहोस्, हरेक प्रोग्रामरले दिनहुँ त्रुटि देख्छन्। सुझाव पढ्नुहोस्:','出错了。别担心，每个程序员每天都会遇到错误。看看提示：'),
+runsHere:T('Run this on your own computer (it cannot run inside this page).','यो आफ्नै कम्प्युटरमा चलाउनुहोस् (यो पेजभित्र चल्दैन)।','请在你自己的电脑上运行（这个页面里无法运行）。'),
+understood:T('I understand this','मैले बुझेँ','我懂了'),done:T('Done','सकियो','完成'),
+prev:T('← Previous lesson','← अघिल्लो पाठ','← 上一课'),next:T('Next lesson →','अर्को पाठ →','下一课 →'),
+earlier:T('Code from earlier lessons (runs quietly before your code)','अघिल्ला पाठका कोड (तपाईंको कोडभन्दा पहिले चुपचाप चल्छ)','之前课程的代码（会在你的代码之前悄悄运行）'),
+playH:T('Playground: try anything','अभ्यास मैदान: जे पनि प्रयास गर्नुहोस्','练习场：随便试试'),
+playP:T('Write any Python here and press Run. Break things, change words, change numbers. Nothing can go wrong. (Note: input() does not work in this page.)','यहाँ कुनै पनि Python लेख्नुहोस् र "चलाउनुहोस्" थिच्नुहोस्। शब्द, संख्या बदलेर हेर्नुहोस्। केही बिग्रँदैन। (नोट: input() यो पेजमा चल्दैन।)','在这里写任何Python代码，然后点击"运行"。随便改文字、改数字，不会弄坏任何东西。（注意：input() 在本页面中不能使用。）'),
+glossH:T('Glossary: every hard word, explained simply','शब्दकोश: हरेक गाह्रो शब्द, सजिलो भाषामा','词汇表：用简单的话解释每个难词'),
+search:T('Search a word…','शब्द खोज्नुहोस्…','搜索词语…'),
+resH:T('Resources: everything you need','स्रोतहरू: तपाईंलाई चाहिने सबै कुरा','学习资源：你需要的一切'),
+resP:T('Free tools and free lessons. Start with the first group. All links open in a new tab.','निःशुल्क औजार र निःशुल्क पाठहरू। पहिलो समूहबाट सुरु गर्नुहोस्।','免费工具和免费课程。从第一组开始。'),
+foot:T('Made for complete beginners. Practice Python runs in your browser using Pyodide. Lessons 12–21 use the real Claude API on your own computer.','पूर्ण सुरुआतीहरूका लागि बनाइएको। अभ्यासको Python तपाईंको ब्राउजरमा Pyodide मार्फत चल्छ। पाठ १२–२१ ले तपाईंको आफ्नै कम्प्युटरमा साँचो Claude API प्रयोग गर्छन्।','为零基础学习者制作。练习用的Python通过Pyodide在浏览器中运行。第12–21课在你自己的电脑上使用真正的Claude API。'),
+pic:{you:T('You','तपाईं','你'),brain:T('Brain','दिमाग','大脑'),brainS:T('AI model','AI मोडेल','AI模型'),tools:T('Tools','औजार','工具'),toolsS:T('calculator, clock…','क्याल्कुलेटर, घडी…','计算器、时钟…'),mem:T('Memory','सम्झना','记忆'),memS:T('what it remembers','के याद राख्छ','记住的内容'),loop:T('think → act → check, repeat','सोच → गर → जाँच, दोहोर्‍याउ','思考 → 行动 → 检查，重复'),ask:T('question','प्रश्न','提问'),ans:T('answer','उत्तर','回答')}
+};
+
+const ERR={
+NameError:T('NameError: Python does not know this name. Maybe a spelling mistake, or you used a variable before creating it. Names are case-sensitive: Name and name are different.','NameError: Python लाई यो नाम थाहा छैन। सायद हिज्जे (spelling) गल्ती छ, वा भेरिएबल बनाउनुअघि नै प्रयोग गर्नुभयो। ठूलो र सानो अक्षर फरक हुन्छ: Name र name फरक हुन्।','NameError：Python不认识这个名字。可能是拼写错误，或者在创建变量之前就使用了它。大小写不同也算不同：Name 和 name 不一样。'),
+SyntaxError:T('SyntaxError: the "grammar" of the code is wrong. Check for a missing bracket ( ), a missing quote " or a missing colon : at the end of def / if / for lines.','SyntaxError: कोडको "व्याकरण" मिलेन। कोष्ठ ( ), उद्धरण चिह्न " वा def / if / for लाइनको अन्त्यमा कोलन : छुटेको छ कि हेर्नुहोस्।','SyntaxError：代码的"语法"不对。检查是否少了括号 ( )、引号 "，或者 def / if / for 行末尾少了冒号 :。'),
+IndentationError:T('IndentationError: the spaces at the start of a line are wrong. Lines inside def / if / for / class need 4 spaces in front.','IndentationError: लाइनको सुरुको खाली ठाउँ मिलेन। def / if / for / class भित्रका लाइनमा अगाडि ४ वटा space चाहिन्छ।','IndentationError：行首的空格不对。def / if / for / class 里面的行前面需要4个空格。'),
+TypeError:T('TypeError: you mixed two kinds of things that do not fit, for example adding text to a number, or giving a function the wrong number of inputs.','TypeError: नमिल्ने दुई किसिमका कुरा मिसाउनुभयो, जस्तै अक्षर र संख्या जोड्नु, वा फङ्सनलाई गलत संख्यामा इनपुट दिनु।','TypeError：你把两种不能放在一起的东西混用了，比如把文字和数字相加，或者给函数的输入数量不对。'),
+KeyError:T('KeyError: that key is not in the dictionary. Check the spelling inside the [ ].','KeyError: डिक्सनरीमा त्यो key छैन। [ ] भित्रको हिज्जे जाँच्नुहोस्।','KeyError：字典里没有这个键。检查 [ ] 里面的拼写。'),
+IndexError:T('IndexError: the list does not have that position. Remember counting starts at 0.','IndexError: सूचीमा त्यो स्थान छैन। गन्ती ० बाट सुरु हुन्छ भन्ने याद गर्नुहोस्।','IndexError：列表里没有这个位置。记住，编号从0开始。'),
+AttributeError:T('AttributeError: this thing does not have that part or method. Check the spelling after the dot.','AttributeError: यो वस्तुमा त्यो भाग वा मेथड छैन। डट (.) पछिको हिज्जे जाँच्नुहोस्।','AttributeError：这个东西没有那个属性或方法。检查点号（.）后面的拼写。'),
+other:T('Read the last line of the error. It usually says what went wrong and which line.','त्रुटिको अन्तिम लाइन पढ्नुहोस्। प्रायः त्यसले के बिग्रियो र कुन लाइनमा भन्ने बताउँछ।','读一读错误信息的最后一行，它通常会告诉你哪里错了、在第几行。')
+};
+
+/* ---------- earlier code reused by later lessons ---------- */
+const TOOLS_PRE=`def calculator(text):
+    total = 0
+    for word in text.split():
+        word = word.strip("?.!,")
+        if word.isdigit():
+            total = total + int(word)
+    return total
+
+from datetime import datetime
+
+def clock():
+    return datetime.now().strftime("%H:%M")
+
+def brain(question):
+    q = question.lower()
+    if "plus" in q or "+" in q:
+        return "calculator"
+    elif "time" in q:
+        return "clock"
+    else:
+        return "none"`;
+
+/* ---------- lessons ---------- */
+const MODS=[
+{t:T('What is an AI agent?','AI एजेन्ट भनेको के हो?','什么是AI智能体？'),
+ d:T('No code yet. First we understand the big picture.','अहिले कोड छैन। पहिले ठूलो चित्र बुझौँ।','还没有代码。我们先了解整体概念。'),
+ s:[
+ {t:T('Chatbot vs agent','च्याटबट र एजेन्टमा फरक','聊天机器人和智能体的区别'),
+  x:T(`<p>A normal <b>chatbot</b> only talks. You ask, it replies with words.</p><p>An <b>AI agent</b> can also <b>do things</b>. It can use a calculator, check the time, search the web, read a file, or send a message, and it decides by itself which one to use.</p><p>Example: you say "What is 1250 plus 3780?" A chatbot may guess. An agent picks up its calculator tool, gets the exact answer, and tells you.</p>`,
+  `<p>साधारण <b>च्याटबट</b>ले कुरा मात्र गर्छ। तपाईं सोध्नुहुन्छ, उसले शब्दमा जवाफ दिन्छ।</p><p><b>AI एजेन्ट</b>ले <b>काम पनि गर्न</b> सक्छ। यसले क्याल्कुलेटर चलाउन, समय हेर्न, इन्टरनेटमा खोज्न, फाइल पढ्न वा सन्देश पठाउन सक्छ, र कुन चलाउने भनेर आफैँ निर्णय गर्छ।</p><p>उदाहरण: तपाईं भन्नुहुन्छ "1250 plus 3780 कति हो?" च्याटबटले अनुमान गर्न सक्छ। एजेन्टले आफ्नो क्याल्कुलेटर औजार उठाउँछ, ठ्याक्कै उत्तर निकाल्छ, अनि तपाईंलाई भन्छ।</p>`,
+  `<p>普通的<b>聊天机器人</b>只会说话：你问，它用文字回答。</p><p><b>AI智能体</b>还能<b>做事</b>。它可以用计算器、看时间、上网搜索、读文件、发消息，而且它会自己决定用哪一个。</p><p>例子：你说"1250 加 3780 等于多少？"聊天机器人可能会猜。智能体会拿起它的计算器工具，算出准确答案，再告诉你。</p>`)},
+ {t:T('The 4 parts of every agent','हरेक एजेन्टका ४ भाग','每个智能体的4个部分'),
+  x:T(`<p>Look at the drawing at the top of this page. Every agent has:</p><ul><li><b>Brain</b>: the AI model (like Claude) that reads your question and decides what to do.</li><li><b>Tools</b>: small programs the brain can use, like a calculator or a clock.</li><li><b>Memory</b>: a list of everything said so far, so the agent remembers.</li><li><b>Loop</b>: the agent repeats think → act → check until the job is done.</li></ul><p>Think of a helpful shop assistant: they listen (question), think (brain), walk to the shelf (tool), remember what you bought last time (memory), and keep helping until you are happy (loop).</p>`,
+  `<p>यो पेजको माथिको चित्र हेर्नुहोस्। हरेक एजेन्टमा यी हुन्छन्:</p><ul><li><b>दिमाग</b>: AI मोडेल (जस्तै Claude) जसले तपाईंको प्रश्न पढ्छ र के गर्ने निर्णय गर्छ।</li><li><b>औजार</b>: दिमागले चलाउन सक्ने साना प्रोग्राम, जस्तै क्याल्कुलेटर वा घडी।</li><li><b>सम्झना (मेमोरी)</b>: अहिलेसम्म भएका सबै कुराको सूची, ताकि एजेन्टले याद राखोस्।</li><li><b>लुप</b>: काम नसकिउन्जेल एजेन्टले सोच → गर → जाँच दोहोर्‍याइरहन्छ।</li></ul><p>पसलको सहयोगी सम्झनुहोस्: उसले सुन्छ (प्रश्न), सोच्छ (दिमाग), र्‍याकमा गएर सामान ल्याउँछ (औजार), तपाईंले पहिले के किन्नुभएको थियो याद राख्छ (मेमोरी), र तपाईं खुसी नहुन्जेल सहयोग गरिरहन्छ (लुप)।</p>`,
+  `<p>看看本页顶部的图。每个智能体都有：</p><ul><li><b>大脑</b>：AI模型（比如Claude），它读懂你的问题并决定做什么。</li><li><b>工具</b>：大脑可以使用的小程序，比如计算器或时钟。</li><li><b>记忆</b>：到目前为止说过的所有内容的列表，让智能体记得住。</li><li><b>循环</b>：智能体不断重复"思考 → 行动 → 检查"，直到任务完成。</li></ul><p>想象一位热心的店员：他听你说（问题），思考（大脑），走到货架取货（工具），记得你上次买了什么（记忆），一直帮你直到你满意（循环）。</p>`)},
+ {t:T('Your plan and how to use this page','तपाईंको योजना र यो पेज कसरी प्रयोग गर्ने','你的学习计划和本页用法'),
+  x:T(`<p>You will learn Python (the most popular language for AI) from zero, and build a small agent step by step. Lessons 1–7 teach Python basics. Lessons 8–11 build the agent with a pretend brain that runs free in your browser. Lesson 12 connects it to the real Claude AI on your computer.</p><p>For each step:</p><ul><li>Read the explanation.</li><li>Look at the code.</li><li>Type it yourself in the box.</li><li>Press <b>Check</b> to compare, then <b>Run</b> to see the result.</li></ul><p>Making mistakes is normal and is how everyone learns.</p>`,
+  `<p>तपाईंले शून्यबाट Python (AI का लागि सबैभन्दा लोकप्रिय भाषा) सिक्नुहुनेछ र चरणबद्ध रूपमा सानो एजेन्ट बनाउनुहुनेछ। पाठ १–७ मा Python का आधारभूत कुरा छन्। पाठ ८–११ मा ब्राउजरमै निःशुल्क चल्ने "नक्कली दिमाग" सहितको एजेन्ट बनाइन्छ। पाठ १२ मा त्यसलाई तपाईंको कम्प्युटरमा साँचो Claude AI सँग जोडिन्छ।</p><p>हरेक चरणमा:</p><ul><li>व्याख्या पढ्नुहोस्।</li><li>कोड हेर्नुहोस्।</li><li>बाकसमा आफैँ टाइप गर्नुहोस्।</li><li><b>जाँच्नुहोस्</b> थिचेर तुलना गर्नुहोस्, अनि <b>चलाउनुहोस्</b> थिचेर नतिजा हेर्नुहोस्।</li></ul><p>गल्ती गर्नु सामान्य हो, सबैजना यसरी नै सिक्छन्।</p>`,
+  `<p>你将从零开始学习Python（AI领域最流行的编程语言），并一步步做出一个小智能体。第1–7课学习Python基础。第8–11课用一个"假大脑"搭建智能体，它免费在浏览器里运行。第12课在你的电脑上把它连接到真正的Claude AI。</p><p>每一步：</p><ul><li>阅读解释。</li><li>看代码。</li><li>在输入框里自己打一遍。</li><li>点击<b>检查</b>对比，再点击<b>运行</b>看结果。</li></ul><p>犯错很正常，每个人都是这样学会的。</p>`)}
+ ]},
+{t:T('Your first Python line','तपाईंको पहिलो Python लाइन','你的第一行Python'),
+ d:T('Learn to show text on the screen, write notes, and do maths.','स्क्रिनमा अक्षर देखाउन, टिप्पणी लेख्न र हिसाब गर्न सिक्नुहोस्।','学习在屏幕上显示文字、写注释和做计算。'),
+ s:[
+ {t:T('print() shows text','print() ले अक्षर देखाउँछ','print() 显示文字'),code:`print("Hello, I am learning to build an AI agent!")`,out:`Hello, I am learning to build an AI agent!`,
+  x:T(`<p><code>print</code> is a command that means "show this on the screen".</p><ul><li><code>( )</code> round brackets hold the thing you want to show.</li><li><code>" "</code> quotes mark text. Text inside quotes is called a <b>string</b>.</li></ul><p>Type it exactly, including the brackets and quotes.</p>`,
+  `<p><code>print</code> एउटा आदेश हो जसको अर्थ "यो स्क्रिनमा देखाऊ" हो।</p><ul><li><code>( )</code> गोलो कोष्ठभित्र देखाउन चाहेको कुरा राखिन्छ।</li><li><code>" "</code> उद्धरण चिह्नले अक्षर (text) जनाउँछ। उद्धरणभित्रको अक्षरलाई <b>स्ट्रिङ (string)</b> भनिन्छ।</li></ul><p>कोष्ठ र उद्धरण चिह्न सहित ठ्याक्कै टाइप गर्नुहोस्।</p>`,
+  `<p><code>print</code> 是一个命令，意思是"把这个显示在屏幕上"。</p><ul><li><code>( )</code> 圆括号里放你想显示的内容。</li><li><code>" "</code> 引号表示文字。引号里的文字叫做<b>字符串（string）</b>。</li></ul><p>请准确输入，包括括号和引号。</p>`)},
+ {t:T('Comments are notes for humans','टिप्पणी मान्छेका लागि हो','注释是写给人看的'),code:`# This is a comment. Python skips it.
+print("Comments are notes for humans")`,out:`Comments are notes for humans`,
+  x:T(`<p>Line 1 starts with <code>#</code>. Everything after <code>#</code> is a <b>comment</b>: a note for people. Python ignores it.</p><p>Line 2 prints text. Code runs from top to bottom, one line after another.</p>`,
+  `<p>लाइन १ <code>#</code> बाट सुरु हुन्छ। <code>#</code> पछिको सबै कुरा <b>टिप्पणी (comment)</b> हो: मान्छेका लागि लेखिएको नोट। Python ले यसलाई बेवास्ता गर्छ।</p><p>लाइन २ ले अक्षर देखाउँछ। कोड माथिबाट तल, एक-एक लाइन गरेर चल्छ।</p>`,
+  `<p>第1行以 <code>#</code> 开头。<code>#</code> 后面的所有内容都是<b>注释</b>：写给人看的笔记，Python会跳过它。</p><p>第2行显示文字。代码从上到下，一行接一行地运行。</p>`)},
+ {t:T('Python can do maths','Python ले हिसाब गर्न सक्छ','Python会做数学'),code:`print(2 + 3)
+print(10 * 4)
+print(20 / 5)`,out:`5
+40
+4.0`,
+  x:T(`<p>Numbers have <b>no quotes</b>. Python calculates them.</p><ul><li><code>+</code> add, <code>-</code> subtract</li><li><code>*</code> multiply (not ×)</li><li><code>/</code> divide (the answer gets a decimal point, like 4.0)</li></ul><p>Try changing the numbers after you run it.</p>`,
+  `<p>संख्यामा <b>उद्धरण चिह्न हुँदैन</b>। Python ले तिनको हिसाब गर्छ।</p><ul><li><code>+</code> जोड, <code>-</code> घटाउ</li><li><code>*</code> गुणन (× होइन)</li><li><code>/</code> भाग (उत्तरमा दशमलव आउँछ, जस्तै 4.0)</li></ul><p>चलाएपछि संख्या बदलेर हेर्नुहोस्।</p>`,
+  `<p>数字<b>不加引号</b>，Python会计算它们。</p><ul><li><code>+</code> 加，<code>-</code> 减</li><li><code>*</code> 乘（不是 ×）</li><li><code>/</code> 除（结果带小数点，比如 4.0）</li></ul><p>运行后试着改改数字。</p>`)}
+ ]},
+{t:T('Variables: labelled boxes','भेरिएबल: नाम लेखिएको बाकस','变量：贴了标签的盒子'),
+ d:T('Store information so you can use it again.','जानकारी सुरक्षित राख्नुहोस् ताकि फेरि प्रयोग गर्न सकियोस्।','把信息存起来，以后可以再用。'),
+ s:[
+ {t:T('Make a variable','भेरिएबल बनाउनुहोस्','创建一个变量'),code:`agent_name = "Sathi"
+print(agent_name)`,out:`Sathi`,
+  x:T(`<p>A <b>variable</b> is a box with a name label. <code>agent_name</code> is the label, <code>"Sathi"</code> is what goes inside.</p><p>The <code>=</code> sign here does not mean "equals". It means <b>"put into the box"</b>.</p><p>Line 2 prints the box's contents. Notice: no quotes around agent_name, because we want what is inside the box, not the word itself.</p><p>Rules for names: no spaces (use <code>_</code>), do not start with a number.</p>`,
+  `<p><b>भेरिएबल</b> भनेको नामको लेबल भएको बाकस हो। <code>agent_name</code> लेबल हो, <code>"Sathi"</code> भित्र राखिएको कुरा हो।</p><p>यहाँ <code>=</code> को अर्थ "बराबर" होइन। यसको अर्थ <b>"बाकसमा राख"</b> हो।</p><p>लाइन २ ले बाकसभित्रको कुरा देखाउँछ। ध्यान दिनुहोस्: agent_name वरिपरि उद्धरण चिह्न छैन, किनकि हामीलाई शब्द होइन, बाकसभित्रको कुरा चाहिएको हो।</p><p>नामका नियम: बीचमा space नराख्ने (<code>_</code> प्रयोग गर्ने), संख्याबाट सुरु नगर्ने।</p>`,
+  `<p><b>变量</b>就是一个贴着名字标签的盒子。<code>agent_name</code> 是标签，<code>"Sathi"</code> 是放进去的东西。</p><p>这里的 <code>=</code> 不是"等于"，而是<b>"放进盒子"</b>的意思。</p><p>第2行显示盒子里的内容。注意：agent_name 两边没有引号，因为我们要的是盒子里的东西，而不是这个词本身。</p><p>命名规则：不能有空格（用 <code>_</code> 代替），不能以数字开头。</p>`)},
+ {t:T('Print several things together','धेरै कुरा सँगै देखाउनुहोस्','一起显示多个内容'),code:`age = 1
+print(agent_name, "is", age, "year old")`,out:`Sathi is 1 year old`,
+  x:T(`<p><code>age</code> holds a number (no quotes). Inside <code>print( )</code>, commas <code>,</code> separate several things. Python puts a space between them.</p><p>agent_name still exists from the previous step, because steps in the same lesson continue from each other.</p>`,
+  `<p><code>age</code> मा संख्या छ (उद्धरण चिह्न छैन)। <code>print( )</code> भित्र अल्पविराम <code>,</code> ले धेरै कुरा छुट्याउँछ। Python ले तिनका बीचमा space राख्छ।</p><p>agent_name अघिल्लो चरणबाटै छ, किनकि एउटै पाठका चरणहरू एकअर्कासँग जोडिएका हुन्छन्।</p>`,
+  `<p><code>age</code> 里存的是数字（没有引号）。在 <code>print( )</code> 里，逗号 <code>,</code> 用来分隔多个内容，Python会在它们之间加一个空格。</p><p>agent_name 是上一步创建的，仍然存在，因为同一课的步骤是连在一起的。</p>`)},
+ {t:T('f-strings: put variables inside text','f-string: अक्षरभित्र भेरिएबल राख्नुहोस्','f-string：把变量放进文字里'),code:`print(f"Hello! My name is {agent_name}.")`,out:`Hello! My name is Sathi.`,
+  x:T(`<p>Put the letter <code>f</code> just before the first quote. Then anything inside curly brackets <code>{ }</code> is replaced with the variable's value.</p><p>Agents use this all the time to build messages.</p>`,
+  `<p>पहिलो उद्धरण चिह्नभन्दा ठीक अगाडि <code>f</code> अक्षर राख्नुहोस्। त्यसपछि मझौला कोष्ठ <code>{ }</code> भित्रको कुरा भेरिएबलको मानले बदलिन्छ।</p><p>एजेन्टहरूले सन्देश बनाउन यो सधैँ प्रयोग गर्छन्।</p>`,
+  `<p>在第一个引号前面加上字母 <code>f</code>。这样，花括号 <code>{ }</code> 里的内容就会被替换成变量的值。</p><p>智能体经常用这种方法来组合消息。</p>`)},
+ {t:T('Kinds of data','डाटाका किसिम','数据的类型'),code:`print(type(agent_name))
+print(type(age))`,out:`<class 'str'>
+<class 'int'>`,
+  x:T(`<p><code>type( )</code> tells you what kind of thing is in a box.</p><ul><li><code>str</code> = string = text</li><li><code>int</code> = integer = whole number</li></ul><p>Other kinds you will meet: <code>float</code> (decimal number like 4.0), <code>bool</code> (True or False), <code>list</code> and <code>dict</code> (next lesson).</p>`,
+  `<p><code>type( )</code> ले बाकसमा कस्तो किसिमको कुरा छ भनेर बताउँछ।</p><ul><li><code>str</code> = string = अक्षर</li><li><code>int</code> = integer = पूर्ण संख्या</li></ul><p>अरू किसिम पनि भेटिनेछन्: <code>float</code> (दशमलव संख्या, जस्तै 4.0), <code>bool</code> (True वा False, अर्थात् साँचो वा झुटो), <code>list</code> र <code>dict</code> (अर्को पाठमा)।</p>`,
+  `<p><code>type( )</code> 告诉你盒子里装的是什么类型的东西。</p><ul><li><code>str</code> = 字符串 = 文字</li><li><code>int</code> = 整数</li></ul><p>以后还会遇到：<code>float</code>（小数，比如 4.0）、<code>bool</code>（True 或 False，真或假）、<code>list</code> 和 <code>dict</code>（下一课）。</p>`)}
+ ]},
+{t:T('Lists and dictionaries','सूची र डिक्सनरी','列表和字典'),
+ d:T('Keep many things together. Agents keep their tools and messages this way.','धेरै कुरा सँगै राख्नुहोस्। एजेन्टले आफ्ना औजार र सन्देश यसरी नै राख्छ।','把很多东西放在一起。智能体就是这样保存工具和消息的。'),
+ s:[
+ {t:T('A list','सूची (list)','列表'),code:`tools = ["calculator", "clock", "notebook"]
+print(tools)`,out:`['calculator', 'clock', 'notebook']`,
+  x:T(`<p>A <b>list</b> holds many items in order, inside square brackets <code>[ ]</code>, separated by commas. Like a shopping list.</p>`,
+  `<p><b>सूची (list)</b> मा धेरै वस्तु क्रमैसँग, वर्गाकार कोष्ठ <code>[ ]</code> भित्र, अल्पविरामले छुट्याएर राखिन्छ। सामान किन्ने सूची जस्तै।</p>`,
+  `<p><b>列表</b>按顺序存放多个项目，写在方括号 <code>[ ]</code> 里，用逗号隔开，就像购物清单。</p>`)},
+ {t:T('Get one item: counting starts at 0','एउटा वस्तु निकाल्नुहोस्: गन्ती ० बाट','取出一项：编号从0开始'),code:`print(tools[0])
+print(tools[2])`,out:`calculator
+notebook`,
+  x:T(`<p>Each item has a position number called an <b>index</b>. Python starts counting at <b>0</b>, not 1. So <code>tools[0]</code> is the first item and <code>tools[2]</code> is the third.</p>`,
+  `<p>हरेक वस्तुको स्थान नम्बर हुन्छ, जसलाई <b>इन्डेक्स (index)</b> भनिन्छ। Python ले गन्ती १ बाट होइन, <b>०</b> बाट सुरु गर्छ। त्यसैले <code>tools[0]</code> पहिलो र <code>tools[2]</code> तेस्रो वस्तु हो।</p>`,
+  `<p>每一项都有一个位置编号，叫做<b>索引（index）</b>。Python从<b>0</b>开始数，而不是1。所以 <code>tools[0]</code> 是第一项，<code>tools[2]</code> 是第三项。</p>`)},
+ {t:T('Add to a list','सूचीमा थप्नुहोस्','往列表里添加'),code:`tools.append("search")
+print(tools)
+print(len(tools))`,out:`['calculator', 'clock', 'notebook', 'search']
+4`,
+  x:T(`<p><code>.append( )</code> adds an item at the end. The dot means "use this list's own action".</p><p><code>len( )</code> counts how many items there are. Later, our agent's memory grows exactly like this.</p>`,
+  `<p><code>.append( )</code> ले अन्त्यमा वस्तु थप्छ। डट (.) को अर्थ "यही सूचीको आफ्नै काम प्रयोग गर" हो।</p><p><code>len( )</code> ले कति वस्तु छन् गन्छ। पछि हाम्रो एजेन्टको मेमोरी ठ्याक्कै यसरी नै बढ्छ।</p>`,
+  `<p><code>.append( )</code> 在末尾添加一项。点号的意思是"使用这个列表自己的功能"。</p><p><code>len( )</code> 数一数一共有几项。之后，我们智能体的记忆就是这样增长的。</p>`)},
+ {t:T('A dictionary: key → value','डिक्सनरी: key → value','字典：键 → 值'),code:`agent = {"name": "Sathi", "language": "Nepali"}
+print(agent["name"])
+print(agent["language"])`,out:`Sathi
+Nepali`,
+  x:T(`<p>A <b>dictionary</b> (<code>dict</code>) stores pairs inside curly brackets <code>{ }</code>. Each pair is <b>key: value</b>, like a real dictionary has word: meaning.</p><p>To get a value, write the key in square brackets: <code>agent["name"]</code>.</p>`,
+  `<p><b>डिक्सनरी</b> (<code>dict</code>) ले मझौला कोष्ठ <code>{ }</code> भित्र जोडीहरू राख्छ। हरेक जोडी <b>key: value</b> (चाबी: मान) हो, जसरी साँच्चिकै शब्दकोशमा शब्द: अर्थ हुन्छ।</p><p>मान निकाल्न key लाई वर्गाकार कोष्ठमा लेख्नुहोस्: <code>agent["name"]</code>।</p>`,
+  `<p><b>字典</b>（<code>dict</code>）在花括号 <code>{ }</code> 里存放成对的数据。每一对是<b>键: 值</b>，就像真正的字典里"词语: 意思"一样。</p><p>要取出值，把键写在方括号里：<code>agent["name"]</code>。</p>`)},
+ {t:T('A message, the way real AI sees it','सन्देश, साँचो AI ले देख्ने तरिकाले','真正的AI看到的消息格式'),code:`message = {"role": "user", "content": "What time is it?"}
+print(message["role"])
+print(message["content"])`,out:`user
+What time is it?`,
+  x:T(`<p>This is important! Real AI models like Claude receive messages as dictionaries exactly like this:</p><ul><li><code>"role"</code>: who is speaking, <code>"user"</code> (you) or <code>"assistant"</code> (the AI).</li><li><code>"content"</code>: what was said.</li></ul><p>A whole conversation is a <b>list of these dictionaries</b>.</p>`,
+  `<p>यो महत्त्वपूर्ण छ! Claude जस्ता साँचो AI मोडेलले सन्देश ठ्याक्कै यस्तै डिक्सनरीको रूपमा पाउँछन्:</p><ul><li><code>"role"</code>: को बोल्दैछ, <code>"user"</code> (तपाईं) वा <code>"assistant"</code> (AI)।</li><li><code>"content"</code>: के भनियो।</li></ul><p>पूरा कुराकानी भनेको <b>यस्ता डिक्सनरीहरूको सूची</b> हो।</p>`,
+  `<p>这一点很重要！像Claude这样的真正AI模型，收到的消息就是这样的字典：</p><ul><li><code>"role"</code>：谁在说话，<code>"user"</code>（你）或 <code>"assistant"</code>（AI）。</li><li><code>"content"</code>：说了什么。</li></ul><p>一整段对话就是<b>由这样的字典组成的列表</b>。</p>`)}
+ ]},
+{t:T('Decisions: if / elif / else','निर्णय: if / elif / else','做决定：if / elif / else'),
+ d:T('Teach the program to choose. This is how an agent picks a tool.','प्रोग्रामलाई छान्न सिकाउनुहोस्। एजेन्टले औजार यसरी नै छान्छ।','教程序做选择。智能体就是这样挑选工具的。'),
+ s:[
+ {t:T('if','if (यदि)','if（如果）'),code:`question = "what is 2 plus 3"
+if "plus" in question:
+    print("I should use the calculator")`,out:`I should use the calculator`,
+  x:T(`<p>Line 2 means: <b>if</b> the word "plus" is <b>in</b> the question, then do the lines below.</p><ul><li>The line ends with a colon <code>:</code></li><li>The line inside starts with <b>4 spaces</b>. This is called <b>indentation</b>. It tells Python "this line belongs inside the if". In the box, press Tab to add 4 spaces.</li></ul>`,
+  `<p>लाइन २ को अर्थ: <b>यदि</b> प्रश्न<b>भित्र</b> "plus" शब्द छ भने तलका लाइन गर।</p><ul><li>लाइनको अन्त्यमा कोलन <code>:</code> हुन्छ।</li><li>भित्रको लाइन <b>४ वटा space</b> बाट सुरु हुन्छ। यसलाई <b>इन्डेन्टेसन (indentation)</b> भनिन्छ। यसले Python लाई "यो लाइन if भित्र पर्छ" भन्छ। बाकसमा Tab थिच्दा ४ space थपिन्छ।</li></ul>`,
+  `<p>第2行的意思是：<b>如果</b>问题<b>里面有</b>"plus"这个词，就执行下面的行。</p><ul><li>这一行以冒号 <code>:</code> 结尾。</li><li>里面的那一行前面有<b>4个空格</b>，这叫<b>缩进</b>，它告诉Python"这一行属于if里面"。在输入框里按Tab键可以输入4个空格。</li></ul>`)},
+ {t:T('else: otherwise','else: नत्र','else：否则'),code:`question = "tell me a joke"
+if "plus" in question:
+    print("I should use the calculator")
+else:
+    print("I can answer by myself")`,out:`I can answer by myself`,
+  x:T(`<p><code>else:</code> means "if not, do this instead". Only one of the two paths runs. Here the question has no "plus", so the else path runs.</p>`,
+  `<p><code>else:</code> को अर्थ "होइन भने, यसको सट्टा यो गर" हो। दुईमध्ये एउटा मात्र बाटो चल्छ। यहाँ प्रश्नमा "plus" छैन, त्यसैले else को बाटो चल्छ।</p>`,
+  `<p><code>else:</code> 的意思是"如果不是，就做这个"。两条路只会走一条。这里问题里没有"plus"，所以走else这条路。</p>`)},
+ {t:T('elif: more choices','elif: थप विकल्प','elif：更多选择'),code:`question = "what time is it"
+if "plus" in question:
+    print("I should use the calculator")
+elif "time" in question:
+    print("I should use the clock")
+else:
+    print("I can answer by myself")`,out:`I should use the clock`,
+  x:T(`<p><code>elif</code> = "else if". Python checks from top to bottom and runs the <b>first</b> match only. This is a tiny "brain" that chooses a tool! Change the question and run again.</p>`,
+  `<p><code>elif</code> = "else if" (नत्र यदि)। Python ले माथिबाट तल जाँच्छ र <b>पहिलो</b> मिल्ने मात्र चलाउँछ। यो औजार छान्ने सानो "दिमाग" हो! प्रश्न बदलेर फेरि चलाउनुहोस्।</p>`,
+  `<p><code>elif</code> = "else if"（否则如果）。Python从上往下检查，只执行<b>第一个</b>符合的。这就是一个会挑工具的小"大脑"！改一下问题再运行试试。</p>`)}
+ ]},
+{t:T('Loops: repeat work','लुप: काम दोहोर्‍याउनुहोस्','循环：重复做事'),
+ d:T('Agents repeat think → act → check. Loops make repeating easy.','एजेन्टले सोच → गर → जाँच दोहोर्‍याउँछ। लुपले दोहोर्‍याउन सजिलो बनाउँछ।','智能体会重复"思考 → 行动 → 检查"。循环让重复变得简单。'),
+ s:[
+ {t:T('for: once for each item','for: हरेक वस्तुका लागि एक पटक','for：每一项做一次'),code:`tools = ["calculator", "clock", "notebook"]
+for tool in tools:
+    print("I can use:", tool)`,out:`I can use: calculator
+I can use: clock
+I can use: notebook`,
+  x:T(`<p>Read line 2 as: "for each <code>tool</code> in the list <code>tools</code>, do the indented lines". Each time round, the box <code>tool</code> holds the next item.</p>`,
+  `<p>लाइन २ लाई यसरी पढ्नुहोस्: "<code>tools</code> सूचीको हरेक <code>tool</code> का लागि, इन्डेन्ट गरिएका लाइन गर"। हरेक पटक <code>tool</code> बाकसमा अर्को वस्तु आउँछ।</p>`,
+  `<p>第2行可以读作："对于列表 <code>tools</code> 里的每一个 <code>tool</code>，执行缩进的那几行"。每转一圈，盒子 <code>tool</code> 里就装着下一项。</p>`)},
+ {t:T('while: repeat until done','while: नसकिउन्जेल दोहोर्‍याउनुहोस्','while：一直重复直到完成'),code:`step = 1
+while step <= 3:
+    print("Thinking... step", step)
+    step = step + 1
+print("Done!")`,out:`Thinking... step 1
+Thinking... step 2
+Thinking... step 3
+Done!`,
+  x:T(`<p><code>while</code> repeats <b>as long as</b> the condition is true. <code>&lt;=</code> means "less than or equal to".</p><p>Line 4 adds 1 to step each time. Without it, step stays 1 forever and the loop never stops (an <b>infinite loop</b>). Real agents use a loop like this: keep going until the job is finished.</p><p>The last line has no spaces in front, so it runs once, after the loop.</p>`,
+  `<p><code>while</code> ले सर्त साँचो <b>रहुन्जेल</b> दोहोर्‍याउँछ। <code>&lt;=</code> को अर्थ "सानो वा बराबर" हो।</p><p>लाइन ४ ले हरेक पटक step मा १ थप्छ। यो नभए step सधैँ १ रहन्छ र लुप कहिल्यै रोकिँदैन (<b>अनन्त लुप</b>)। साँचो एजेन्टले यस्तै लुप प्रयोग गर्छ: काम नसकिउन्जेल चलिरहने।</p><p>अन्तिम लाइनको अगाडि space छैन, त्यसैले त्यो लुपपछि एक पटक मात्र चल्छ।</p>`,
+  `<p><code>while</code> 会在条件为真的<b>时候一直</b>重复。<code>&lt;=</code> 表示"小于或等于"。</p><p>第4行每次给 step 加1。如果没有这一行，step 永远是1，循环永远不会停（叫<b>死循环</b>）。真正的智能体就用这样的循环：一直做，直到任务完成。</p><p>最后一行前面没有空格，所以它只在循环结束后运行一次。</p>`)}
+ ]},
+{t:T('Functions: reusable skills','फङ्सन: फेरि प्रयोग गर्न मिल्ने सीप','函数：可以反复使用的技能'),
+ d:T('A function is a named recipe. Every agent tool is a function.','फङ्सन भनेको नाम भएको विधि हो। एजेन्टको हरेक औजार एउटा फङ्सन हो।','函数就是一个有名字的"菜谱"。智能体的每个工具都是一个函数。'),
+ s:[
+ {t:T('def: create a function','def: फङ्सन बनाउनुहोस्','def：创建函数'),code:`def say_hello():
+    print("Namaste! I am your agent.")
+
+say_hello()
+say_hello()`,out:`Namaste! I am your agent.
+Namaste! I am your agent.`,
+  x:T(`<p><code>def</code> means "define" (create). <code>say_hello</code> is the name, <code>()</code> follows, and the line ends with <code>:</code>. The indented lines are the recipe.</p><p>Creating a function does <b>not</b> run it. Lines 4 and 5 <b>call</b> it (use it), so it runs twice.</p>`,
+  `<p><code>def</code> को अर्थ "define" (बनाउनु) हो। <code>say_hello</code> नाम हो, त्यसपछि <code>()</code> आउँछ, र लाइन <code>:</code> मा टुङ्गिन्छ। इन्डेन्ट गरिएका लाइनहरू विधि हुन्।</p><p>फङ्सन बनाउँदैमा त्यो <b>चल्दैन</b>। लाइन ४ र ५ ले त्यसलाई <b>बोलाउँछन्</b> (प्रयोग गर्छन्), त्यसैले दुई पटक चल्छ।</p>`,
+  `<p><code>def</code> 是"define"（定义、创建）的意思。<code>say_hello</code> 是名字，后面跟着 <code>()</code>，这一行以 <code>:</code> 结尾。缩进的那几行就是"菜谱"内容。</p><p>创建函数<b>不会</b>运行它。第4行和第5行<b>调用</b>（使用）它，所以它运行了两次。</p>`)},
+ {t:T('Inputs and return','इनपुट र return','输入和返回值'),code:`def add(a, b):
+    return a + b
+
+result = add(2, 3)
+print(result)
+print(add(100, 50))`,out:`5
+150`,
+  x:T(`<p><code>a</code> and <code>b</code> are <b>parameters</b>: empty boxes the function fills when you call it. <code>add(2, 3)</code> puts 2 in a and 3 in b.</p><p><code>return</code> sends the answer back to whoever called the function. Here the answer goes into the box <code>result</code>.</p>`,
+  `<p><code>a</code> र <code>b</code> <b>प्यारामिटर</b> हुन्: खाली बाकस, जुन फङ्सन बोलाउँदा भरिन्छन्। <code>add(2, 3)</code> ले a मा 2 र b मा 3 राख्छ।</p><p><code>return</code> ले उत्तर फङ्सन बोलाउनेलाई फिर्ता पठाउँछ। यहाँ उत्तर <code>result</code> बाकसमा जान्छ।</p>`,
+  `<p><code>a</code> 和 <code>b</code> 是<b>参数</b>：调用函数时会被填满的空盒子。<code>add(2, 3)</code> 把2放进a，把3放进b。</p><p><code>return</code> 把答案送回给调用这个函数的地方。这里答案被放进了盒子 <code>result</code>。</p>`)},
+ {t:T('A real tool: the clock','साँचो औजार: घडी','一个真正的工具：时钟'),code:`from datetime import datetime
+
+def clock():
+    return datetime.now().strftime("%H:%M")
+
+print("The time is", clock())`,out:`The time is 18:56   (your time will be different)`,
+  x:T(`<p>Line 1 <b>imports</b> (borrows) ready-made code called <code>datetime</code> from Python's built-in <b>library</b>. You do not have to write everything yourself.</p><p><code>datetime.now()</code> gets the current date and time. <code>.strftime("%H:%M")</code> formats it as hours:minutes.</p><p>You just built your agent's first tool!</p>`,
+  `<p>लाइन १ ले Python को आफ्नै <b>लाइब्रेरी</b>बाट <code>datetime</code> नामको तयारी कोड <b>import</b> गर्छ (सापटी लिन्छ)। सबै कुरा आफैँ लेख्नु पर्दैन।</p><p><code>datetime.now()</code> ले अहिलेको मिति र समय ल्याउँछ। <code>.strftime("%H:%M")</code> ले त्यसलाई घण्टा:मिनेट रूपमा मिलाउँछ।</p><p>तपाईंले भर्खरै आफ्नो एजेन्टको पहिलो औजार बनाउनुभयो!</p>`,
+  `<p>第1行从Python自带的<b>库</b>里<b>导入</b>（借用）了一段现成的代码，叫 <code>datetime</code>。你不需要什么都自己写。</p><p><code>datetime.now()</code> 获取当前的日期和时间。<code>.strftime("%H:%M")</code> 把它整理成"小时:分钟"的格式。</p><p>你刚刚做出了智能体的第一个工具！</p>`)}
+ ]},
+{t:T('Classes and objects (OOP)','क्लास र अब्जेक्ट (OOP)','类和对象（面向对象编程）'),
+ d:T('A class is a blueprint. Our final agent will be a class.','क्लास भनेको नक्सा (ब्लुप्रिन्ट) हो। हाम्रो अन्तिम एजेन्ट एउटा क्लास हुनेछ।','类就是一张设计图。我们最后的智能体就是一个类。'),
+ s:[
+ {t:T('Blueprint and the thing built','नक्सा र बनेको चीज','设计图和造出来的东西'),code:`class Robot:
+    def __init__(self, name):
+        self.name = name
+
+r = Robot("Sathi")
+print(r.name)`,out:`Sathi`,
+  x:T(`<p>A <b>class</b> is a blueprint, like a house plan. An <b>object</b> is a real thing built from it, like an actual house. One plan, many houses.</p><ul><li><code>class Robot:</code> starts the blueprint. Class names start with a capital letter.</li><li><code>__init__</code> (two underscores each side) is the <b>setup function</b>. It runs automatically when a new robot is built.</li><li><code>self</code> means "this robot itself". <code>self.name = name</code> stores the name inside this robot.</li><li><code>r = Robot("Sathi")</code> builds one robot and puts it in box r.</li></ul>`,
+  `<p><b>क्लास</b> भनेको घरको नक्सा जस्तो ब्लुप्रिन्ट हो। <b>अब्जेक्ट (वस्तु)</b> भनेको त्यसबाट बनेको साँचो चीज हो, जस्तै बनिसकेको घर। एउटा नक्सा, धेरै घर।</p><ul><li><code>class Robot:</code> ले नक्सा सुरु गर्छ। क्लासको नाम ठूलो अक्षरबाट सुरु हुन्छ।</li><li><code>__init__</code> (दुवैतिर दुई-दुई वटा underscore) <b>सेटअप फङ्सन</b> हो। नयाँ रोबोट बन्दा यो आफैँ चल्छ।</li><li><code>self</code> को अर्थ "यही रोबोट आफैँ" हो। <code>self.name = name</code> ले नाम यही रोबोटभित्र राख्छ।</li><li><code>r = Robot("Sathi")</code> ले एउटा रोबोट बनाएर r बाकसमा राख्छ।</li></ul>`,
+  `<p><b>类</b>就是一张设计图，像房子的图纸。<b>对象</b>是按照它造出来的真实东西，像一栋真正的房子。一张图纸，可以造很多房子。</p><ul><li><code>class Robot:</code> 开始写设计图。类名以大写字母开头。</li><li><code>__init__</code>（两边各有两个下划线）是<b>初始化函数</b>，每造一个新机器人时它会自动运行。</li><li><code>self</code> 的意思是"这个机器人自己"。<code>self.name = name</code> 把名字存进这个机器人里。</li><li><code>r = Robot("Sathi")</code> 造出一个机器人，放进盒子 r 里。</li></ul>`)},
+ {t:T('Methods: what an object can do','मेथड: अब्जेक्टले गर्न सक्ने काम','方法：对象能做的事'),code:`class Robot:
+    def __init__(self, name):
+        self.name = name
+
+    def greet(self):
+        print(f"Hi, I am {self.name}")
+
+r = Robot("Sathi")
+r.greet()`,out:`Hi, I am Sathi`,
+  x:T(`<p>A function inside a class is called a <b>method</b>. It is an action the object can do. Every method's first input is <code>self</code>, so it can reach the object's own data, like <code>self.name</code>.</p><p>Call it with a dot: <code>r.greet()</code>.</p>`,
+  `<p>क्लासभित्रको फङ्सनलाई <b>मेथड</b> भनिन्छ। यो अब्जेक्टले गर्न सक्ने काम हो। हरेक मेथडको पहिलो इनपुट <code>self</code> हुन्छ, ताकि त्यसले अब्जेक्टको आफ्नै डाटा, जस्तै <code>self.name</code>, प्रयोग गर्न सकोस्।</p><p>डट प्रयोग गरेर बोलाउनुहोस्: <code>r.greet()</code>।</p>`,
+  `<p>写在类里面的函数叫做<b>方法</b>，它是对象能做的动作。每个方法的第一个输入都是 <code>self</code>，这样它就能用到对象自己的数据，比如 <code>self.name</code>。</p><p>用点号调用：<code>r.greet()</code>。</p>`)},
+ {t:T('Many objects from one class','एउटै क्लासबाट धेरै अब्जेक्ट','一个类造出多个对象'),code:`b = Robot("Pengyou")
+r.greet()
+b.greet()`,out:`Hi, I am Sathi
+Hi, I am Pengyou`,
+  x:T(`<p>Same blueprint, two different robots. Each one keeps its own name. ("Pengyou" means "friend" in Chinese, "Sathi" means "friend" in Nepali.)</p>`,
+  `<p>एउटै नक्सा, दुई फरक रोबोट। हरेकले आफ्नै नाम राख्छ। ("Sathi" को अर्थ नेपालीमा "साथी", "Pengyou" को अर्थ चिनियाँमा "साथी" हो।)</p>`,
+  `<p>同一张设计图，两个不同的机器人，各自保存自己的名字。（"Pengyou"就是中文的"朋友"，"Sathi"是尼泊尔语的"朋友"。）</p>`)},
+ {t:T('Objects remember and change','अब्जेक्टले याद राख्छ र बदलिन्छ','对象会记住，也会改变'),code:`r.name = "Sathi 2.0"
+r.greet()
+b.greet()`,out:`Hi, I am Sathi 2.0
+Hi, I am Pengyou`,
+  x:T(`<p>You can change data inside one object. Only r changed; b is not affected. This is why agents are built as objects: each agent keeps its own name, tools and memory.</p>`,
+  `<p>एउटा अब्जेक्टभित्रको डाटा बदल्न सकिन्छ। r मात्र बदलियो; b मा असर परेन। त्यसैले एजेन्टलाई अब्जेक्टको रूपमा बनाइन्छ: हरेक एजेन्टले आफ्नै नाम, औजार र मेमोरी राख्छ।</p>`,
+  `<p>你可以修改一个对象里面的数据。只有 r 变了，b 没有受影响。这就是为什么智能体要做成对象：每个智能体都有自己的名字、工具和记忆。</p>`)}
+ ]},
+{t:T('Build the tools','औजारहरू बनाउनुहोस्','制作工具'),
+ d:T('Now we build real agent parts. First, the tools.','अब साँचो एजेन्टका भाग बनाऔँ। पहिले, औजारहरू।','现在开始做真正的智能体零件。首先是工具。'),
+ s:[
+ {t:T('Calculator tool','क्याल्कुलेटर औजार','计算器工具'),code:`def calculator(text):
+    total = 0
+    for word in text.split():
+        word = word.strip("?.!,")
+        if word.isdigit():
+            total = total + int(word)
+    return total
+
+print(calculator("what is 2 plus 3"))
+print(calculator("10 plus 20 plus 5?"))`,out:`5
+35`,
+  x:T(`<p>This tool finds all numbers in a sentence and adds them. Line by line:</p><ul><li><code>total = 0</code>: start at zero.</li><li><code>text.split()</code>: cut the sentence into words: "what", "is", "2", "plus", "3".</li><li><code>word.strip("?.!,")</code>: remove punctuation from the ends, so "5?" becomes "5".</li><li><code>word.isdigit()</code>: True if the word is only digits.</li><li><code>int(word)</code>: turn the text "2" into the number 2, then add it to total.</li><li><code>return total</code>: send back the answer.</li></ul><p>Notice the levels of indentation: 4, 8 and 12 spaces show what is inside what.</p>`,
+  `<p>यो औजारले वाक्यमा भएका सबै संख्या खोजेर जोड्छ। लाइन-लाइन:</p><ul><li><code>total = 0</code>: शून्यबाट सुरु।</li><li><code>text.split()</code>: वाक्यलाई शब्दमा टुक्र्याउँछ: "what", "is", "2", "plus", "3"।</li><li><code>word.strip("?.!,")</code>: छेउका चिह्न हटाउँछ, त्यसैले "5?" "5" बन्छ।</li><li><code>word.isdigit()</code>: शब्दमा अङ्क मात्र छ भने True।</li><li><code>int(word)</code>: अक्षर "2" लाई संख्या 2 बनाउँछ, अनि total मा जोड्छ।</li><li><code>return total</code>: उत्तर फिर्ता पठाउँछ।</li></ul><p>इन्डेन्टेसनका तह हेर्नुहोस्: ४, ८ र १२ space ले कुन कुराभित्र के छ देखाउँछन्।</p>`,
+  `<p>这个工具会找出句子里所有的数字并把它们加起来。逐行解释：</p><ul><li><code>total = 0</code>：从0开始。</li><li><code>text.split()</code>：把句子切成一个个词："what"、"is"、"2"、"plus"、"3"。</li><li><code>word.strip("?.!,")</code>：去掉两端的标点，所以"5?"变成"5"。</li><li><code>word.isdigit()</code>：如果这个词全是数字，就是True。</li><li><code>int(word)</code>：把文字"2"变成数字2，再加到total上。</li><li><code>return total</code>：把答案送回去。</li></ul><p>注意缩进的层次：4、8、12个空格表示谁在谁的里面。</p>`)},
+ {t:T('Clock tool','घडी औजार','时钟工具'),code:`from datetime import datetime
+
+def clock():
+    return datetime.now().strftime("%H:%M")
+
+print(clock())`,out:`18:56   (your time will be different)`,
+  x:T(`<p>The same clock you built in Lesson 6. Now the agent has two tools.</p>`,
+  `<p>पाठ ६ मा बनाएकै घडी। अब एजेन्टसँग दुई वटा औजार छन्।</p>`,
+  `<p>就是第6课做的那个时钟。现在智能体有两个工具了。</p>`)},
+ {t:T('A toolbox dictionary','औजार बाकस (डिक्सनरी)','工具箱字典'),code:`toolbox = {"calculator": calculator, "clock": clock}
+print(list(toolbox.keys()))
+print(toolbox["calculator"]("4 plus 4"))`,out:`['calculator', 'clock']
+8`,
+  x:T(`<p>Functions can be stored in a dictionary too! The key is the tool's name (text), the value is the function itself (no brackets, so it is not called yet).</p><p><code>toolbox["calculator"]</code> gets the function, then <code>("4 plus 4")</code> calls it. Real agents look up tools by name exactly like this.</p>`,
+  `<p>फङ्सनलाई पनि डिक्सनरीमा राख्न सकिन्छ! key भनेको औजारको नाम (अक्षर) हो, value भनेको फङ्सन आफैँ हो (कोष्ठ छैन, त्यसैले अहिले बोलाइएको छैन)।</p><p><code>toolbox["calculator"]</code> ले फङ्सन निकाल्छ, अनि <code>("4 plus 4")</code> ले त्यसलाई बोलाउँछ। साँचो एजेन्टले पनि ठ्याक्कै यसरी नामबाट औजार खोज्छ।</p>`,
+  `<p>函数也可以放进字典里！键是工具的名字（文字），值是函数本身（没有括号，所以还没被调用）。</p><p><code>toolbox["calculator"]</code> 取出函数，然后 <code>("4 plus 4")</code> 调用它。真正的智能体就是这样按名字查找工具的。</p>`)}
+ ]},
+{t:T('The brain','दिमाग','大脑'),
+ d:T('The brain decides which tool to use. We start with a pretend brain, then see how a real one replies.','दिमागले कुन औजार चलाउने निर्णय गर्छ। पहिले नक्कली दिमाग बनाउँछौँ, अनि साँचो दिमागले कसरी जवाफ दिन्छ हेर्छौँ।','大脑决定用哪个工具。我们先做一个假大脑，再看看真正的大脑是怎么回答的。'),
+ s:[
+ {t:T('A pretend brain','नक्कली दिमाग','一个假大脑'),code:`def brain(question):
+    q = question.lower()
+    if "plus" in q or "+" in q:
+        return "calculator"
+    elif "time" in q:
+        return "clock"
+    else:
+        return "none"
+
+print(brain("What is 4 plus 6?"))
+print(brain("What TIME is it?"))
+print(brain("Who are you?"))`,out:`calculator
+clock
+none`,
+  x:T(`<p>A real brain (an LLM like Claude) understands language. Ours just looks for keywords, but its <b>job is the same</b>: read the question and return the name of the tool to use.</p><ul><li><code>.lower()</code> makes all letters small, so "TIME" and "time" both match.</li><li><code>or</code> means either one is enough.</li></ul><p>Because this brain is pretend, it is free and runs here. In Lesson 12 you swap it for a real one.</p>`,
+  `<p>साँचो दिमाग (Claude जस्तो LLM) ले भाषा बुझ्छ। हाम्रोले केवल मुख्य शब्द खोज्छ, तर यसको <b>काम उही हो</b>: प्रश्न पढ्ने र चलाउनुपर्ने औजारको नाम फर्काउने।</p><ul><li><code>.lower()</code> ले सबै अक्षर सानो बनाउँछ, त्यसैले "TIME" र "time" दुवै मिल्छन्।</li><li><code>or</code> को अर्थ "वा", दुईमध्ये एउटा भए पुग्छ।</li></ul><p>यो दिमाग नक्कली भएकाले निःशुल्क छ र यहीँ चल्छ। पाठ १२ मा यसलाई साँचोसँग साट्नुहुनेछ।</p>`,
+  `<p>真正的大脑（像Claude这样的大语言模型）能理解语言。我们的只是找关键词，但它的<b>任务是一样的</b>：读懂问题，返回要用的工具名字。</p><ul><li><code>.lower()</code> 把所有字母变成小写，所以"TIME"和"time"都能匹配。</li><li><code>or</code> 表示"或者"，满足其中一个就行。</li></ul><p>因为这是假大脑，所以免费，并且在这里就能运行。第12课你会把它换成真正的大脑。</p>`)},
+ {t:T('How a real brain answers: JSON','साँचो दिमागले कसरी जवाफ दिन्छ: JSON','真正的大脑怎么回答：JSON'),code:`import json
+
+reply = '{"tool": "calculator", "reason": "the user wants to add numbers"}'
+data = json.loads(reply)
+print(data["tool"])
+print(data["reason"])`,out:`calculator
+the user wants to add numbers`,
+  x:T(`<p>Real AI services send answers as <b>JSON</b>: text that looks just like a Python dictionary. Computers everywhere use it to send data to each other.</p><ul><li>The reply is wrapped in single quotes <code>' '</code> because it contains double quotes inside.</li><li><code>json.loads( )</code> turns that text into a real dictionary you can use.</li></ul>`,
+  `<p>साँचो AI सेवाहरूले उत्तर <b>JSON</b> मा पठाउँछन्: Python डिक्सनरी जस्तै देखिने अक्षर। संसारभरका कम्प्युटरले एकअर्कालाई डाटा पठाउन यही प्रयोग गर्छन्।</p><ul><li>जवाफभित्र दोहोरो उद्धरण चिह्न भएकाले त्यसलाई एकल उद्धरण <code>' '</code> ले घेरिएको छ।</li><li><code>json.loads( )</code> ले त्यो अक्षरलाई प्रयोग गर्न मिल्ने साँचो डिक्सनरीमा बदल्छ।</li></ul>`,
+  `<p>真正的AI服务用<b>JSON</b>格式发送回答：一种看起来和Python字典一模一样的文字。全世界的计算机都用它来互相传递数据。</p><ul><li>回答外面用单引号 <code>' '</code> 包起来，因为里面有双引号。</li><li><code>json.loads( )</code> 把这段文字变成一个可以使用的真正字典。</li></ul>`)}
+ ]},
+{t:T('The agent loop','एजेन्ट लुप','智能体循环'),pre:TOOLS_PRE,
+ d:T('Put brain and tools together: think → act → answer.','दिमाग र औजार जोड्नुहोस्: सोच → गर → उत्तर।','把大脑和工具组合起来：思考 → 行动 → 回答。'),
+ s:[
+ {t:T('Your first agent','तपाईंको पहिलो एजेन्ट','你的第一个智能体'),code:`def agent(question):
+    print("User:", question)
+    choice = brain(question)
+    print("Brain chose:", choice)
+    if choice == "calculator":
+        answer = calculator(question)
+    elif choice == "clock":
+        answer = clock()
+    else:
+        answer = "I can add numbers and tell the time."
+    print("Agent:", answer)
+
+agent("What is 12 plus 30?")`,out:`User: What is 12 plus 30?
+Brain chose: calculator
+Agent: 42`,
+  x:T(`<p>The calculator, clock and brain from earlier lessons are already loaded (see the grey box above). Now:</p><ul><li><b>Think</b>: <code>choice = brain(question)</code> asks the brain which tool.</li><li><b>Act</b>: the if / elif runs the chosen tool. <code>==</code> (two equal signs) means "is it equal?". One <code>=</code> means "put into the box".</li><li><b>Answer</b>: print the result.</li></ul><p>Congratulations, this is a working agent!</p>`,
+  `<p>अघिल्ला पाठका क्याल्कुलेटर, घडी र दिमाग पहिले नै लोड छन् (माथिको खैरो बाकस हेर्नुहोस्)। अब:</p><ul><li><b>सोच</b>: <code>choice = brain(question)</code> ले दिमागलाई कुन औजार भनेर सोध्छ।</li><li><b>गर</b>: if / elif ले छानिएको औजार चलाउँछ। <code>==</code> (दुई बराबर चिह्न) को अर्थ "बराबर छ?" हो। एउटा <code>=</code> को अर्थ "बाकसमा राख" हो।</li><li><b>उत्तर</b>: नतिजा देखाउँछ।</li></ul><p>बधाई छ, यो चल्ने एजेन्ट हो!</p>`,
+  `<p>之前课程里的计算器、时钟和大脑已经加载好了（见上面的灰色框）。现在：</p><ul><li><b>思考</b>：<code>choice = brain(question)</code> 问大脑该用哪个工具。</li><li><b>行动</b>：if / elif 运行选中的工具。<code>==</code>（两个等号）表示"是否相等？"，一个 <code>=</code> 表示"放进盒子"。</li><li><b>回答</b>：把结果显示出来。</li></ul><p>恭喜，这是一个能工作的智能体！</p>`)},
+ {t:T('Ask more questions','थप प्रश्न सोध्नुहोस्','多问几个问题'),code:`agent("What time is it?")
+agent("Hello there!")`,out:`User: What time is it?
+Brain chose: clock
+Agent: 18:56
+User: Hello there!
+Brain chose: none
+Agent: I can add numbers and tell the time.`,
+  x:T(`<p>Same agent, different questions, different tools. Try your own question in the box.</p>`,
+  `<p>एउटै एजेन्ट, फरक प्रश्न, फरक औजार। बाकसमा आफ्नै प्रश्न राखेर हेर्नुहोस्।</p>`,
+  `<p>同一个智能体，不同的问题，用不同的工具。在输入框里试试你自己的问题。</p>`)},
+ {t:T('A to-do list for the agent','एजेन्टका लागि कामको सूची','给智能体一张任务清单'),code:`tasks = ["What is 5 plus 5?", "What time is it?", "Sing a song"]
+for task in tasks:
+    agent(task)
+    print("---")`,out:`User: What is 5 plus 5?
+Brain chose: calculator
+Agent: 10
+---
+User: What time is it?
+Brain chose: clock
+Agent: 18:56
+---
+User: Sing a song
+Brain chose: none
+Agent: I can add numbers and tell the time.
+---`,
+  x:T(`<p>A loop gives the agent many jobs. Real agents go further: after each tool result they <b>check</b> and think again, looping until the whole job is done. You will see that real loop in Lesson 12.</p>`,
+  `<p>लुपले एजेन्टलाई धेरै काम दिन्छ। साँचो एजेन्ट अझ अगाडि जान्छ: हरेक औजारको नतिजापछि <b>जाँच्छ</b> र फेरि सोच्छ, पूरा काम नसकिउन्जेल लुप चलाउँछ। त्यो साँचो लुप पाठ १२ मा देख्नुहुनेछ।</p>`,
+  `<p>用循环给智能体安排很多任务。真正的智能体更进一步：每次拿到工具结果后，它会<b>检查</b>并重新思考，一直循环到整个任务完成。你会在第12课看到这个真正的循环。</p>`)}
+ ]},
+{t:T('Memory and the Agent class','मेमोरी र Agent क्लास','记忆和 Agent 类'),pre:TOOLS_PRE,
+ d:T('Put everything into one class, and give it memory.','सबै कुरा एउटै क्लासमा राख्नुहोस्, र मेमोरी दिनुहोस्।','把所有东西放进一个类里，并给它加上记忆。'),
+ s:[
+ {t:T('The Agent class','Agent क्लास','Agent 类'),code:`class Agent:
+    def __init__(self, name):
+        self.name = name
+        self.memory = []
+
+    def remember(self, role, text):
+        self.memory.append({"role": role, "content": text})
+
+    def ask(self, question):
+        self.remember("user", question)
+        choice = brain(question)
+        if choice == "calculator":
+            answer = str(calculator(question))
+        elif choice == "clock":
+            answer = clock()
+        else:
+            answer = f"I am {self.name}. I can add numbers and tell the time."
+        self.remember("assistant", answer)
+        return answer
+
+sathi = Agent("Sathi")
+print(sathi.ask("What is 8 plus 9?"))`,out:`17`,
+  x:T(`<p>This joins everything you learned:</p><ul><li><code>self.memory = []</code>: each agent starts with an empty list.</li><li><code>remember</code>: adds a message dictionary <code>{"role": ..., "content": ...}</code>, the same format real AI uses (Lesson 3).</li><li><code>ask</code>: saves the question, thinks, acts, saves the answer, and returns it.</li><li><code>str( )</code> turns the number 17 into text "17", so every answer is text.</li></ul><p>It is long. Type it slowly, one line at a time, and use Check to find mistakes.</p>`,
+  `<p>यसले तपाईंले सिकेका सबै कुरा जोड्छ:</p><ul><li><code>self.memory = []</code>: हरेक एजेन्ट खाली सूचीबाट सुरु हुन्छ।</li><li><code>remember</code>: सन्देश डिक्सनरी <code>{"role": ..., "content": ...}</code> थप्छ, साँचो AI ले प्रयोग गर्ने उही ढाँचा (पाठ ३)।</li><li><code>ask</code>: प्रश्न सुरक्षित गर्छ, सोच्छ, काम गर्छ, उत्तर सुरक्षित गर्छ र फर्काउँछ।</li><li><code>str( )</code> ले संख्या 17 लाई अक्षर "17" बनाउँछ, ताकि हरेक उत्तर अक्षरमा होस्।</li></ul><p>यो लामो छ। बिस्तारै, एक-एक लाइन टाइप गर्नुहोस्, र गल्ती खोज्न "जाँच्नुहोस्" प्रयोग गर्नुहोस्।</p>`,
+  `<p>这里把你学过的所有东西组合在一起：</p><ul><li><code>self.memory = []</code>：每个智能体一开始都有一个空列表。</li><li><code>remember</code>：添加一条消息字典 <code>{"role": ..., "content": ...}</code>，和真正的AI用的格式一样（第3课）。</li><li><code>ask</code>：保存问题，思考，行动，保存回答，然后返回回答。</li><li><code>str( )</code> 把数字17变成文字"17"，让每个回答都是文字。</li></ul><p>代码比较长。慢慢地一行一行输入，用"检查"来找错误。</p>`)},
+ {t:T('See the memory','मेमोरी हेर्नुहोस्','查看记忆'),code:`print(sathi.ask("What time is it?"))
+for m in sathi.memory:
+    print(m["role"], ":", m["content"])`,out:`18:56
+user : What is 8 plus 9?
+assistant : 17
+user : What time is it?
+assistant : 18:56`,
+  x:T(`<p>The agent remembers the whole conversation, in order. When you use a real AI, you send this whole memory list every time, so the AI knows what was said before. AI models do not remember on their own; <b>your code</b> keeps the memory.</p>`,
+  `<p>एजेन्टले पूरा कुराकानी क्रमैसँग याद राख्छ। साँचो AI प्रयोग गर्दा, तपाईंले हरेक पटक यो पूरा मेमोरी सूची पठाउनुहुन्छ, ताकि AI लाई पहिले के भनिएको थियो थाहा होस्। AI मोडेलले आफैँ याद राख्दैन; <b>तपाईंको कोड</b>ले मेमोरी राख्छ।</p>`,
+  `<p>智能体按顺序记住了整段对话。使用真正的AI时，你每次都要把这整个记忆列表发过去，AI才知道之前说过什么。AI模型自己是不会记住的，是<b>你的代码</b>在保存记忆。</p>`)},
+ {t:T('Two agents, two memories','दुई एजेन्ट, दुई मेमोरी','两个智能体，两份记忆'),code:`pengyou = Agent("Pengyou")
+print(pengyou.ask("Who are you?"))
+print(sathi.name, "remembers", len(sathi.memory), "messages")
+print(pengyou.name, "remembers", len(pengyou.memory), "messages")`,out:`I am Pengyou. I can add numbers and tell the time.
+Sathi remembers 4 messages
+Pengyou remembers 2 messages`,
+  x:T(`<p>This is the power of classes (OOP): each agent object has its own separate memory. You have now built a complete small agent with a brain, tools, memory and a class!</p>`,
+  `<p>यो क्लास (OOP) को शक्ति हो: हरेक एजेन्ट अब्जेक्टको आफ्नै छुट्टै मेमोरी हुन्छ। तपाईंले दिमाग, औजार, मेमोरी र क्लास भएको पूरा सानो एजेन्ट बनाइसक्नुभयो!</p>`,
+  `<p>这就是类（面向对象）的威力：每个智能体对象都有自己独立的记忆。你已经做出了一个完整的小智能体，有大脑、工具、记忆，还是一个类！</p>`)}
+ ]},
+{t:T('Real AI on your computer','तपाईंको कम्प्युटरमा साँचो AI','在你的电脑上使用真正的AI'),
+ d:T('Swap the pretend brain for Claude. These steps run on your own computer, not in this page.','नक्कली दिमागको सट्टा Claude राख्नुहोस्। यी चरण यो पेजमा होइन, तपाईंको आफ्नै कम्प्युटरमा चल्छन्।','把假大脑换成Claude。这些步骤在你自己的电脑上运行，而不是在这个页面里。'),
+ s:[
+ {t:T('Install Python and VS Code','Python र VS Code इन्स्टल गर्नुहोस्','安装Python和VS Code'),local:1,code:`python --version`,
+  x:T(`<ul><li>Download Python from <b>python.org/downloads</b> (see Resources). On Windows, tick <b>"Add Python to PATH"</b> on the first install screen.</li><li>Install <b>VS Code</b>, a free code editor (a notebook app for code).</li><li>Open a <b>terminal</b> (a window where you type commands): in VS Code choose Terminal → New Terminal.</li><li>Type the command above and press Enter. You should see something like <code>Python 3.13.1</code>. On Mac, use <code>python3</code> instead of <code>python</code>.</li></ul>`,
+  `<ul><li><b>python.org/downloads</b> बाट Python डाउनलोड गर्नुहोस् (स्रोतहरू हेर्नुहोस्)। Windows मा पहिलो स्क्रिनमा <b>"Add Python to PATH"</b> मा टिक लगाउनुहोस्।</li><li><b>VS Code</b> इन्स्टल गर्नुहोस्, यो निःशुल्क कोड लेख्ने एप हो।</li><li><b>टर्मिनल</b> खोल्नुहोस् (आदेश टाइप गर्ने झ्याल): VS Code मा Terminal → New Terminal छान्नुहोस्।</li><li>माथिको आदेश टाइप गरेर Enter थिच्नुहोस्। <code>Python 3.13.1</code> जस्तो देखिनुपर्छ। Mac मा <code>python</code> को सट्टा <code>python3</code> लेख्नुहोस्।</li></ul>`,
+  `<ul><li>从 <b>python.org/downloads</b> 下载Python（见"学习资源"）。在Windows上，安装的第一个界面要勾选 <b>"Add Python to PATH"</b>。</li><li>安装 <b>VS Code</b>，一个免费的代码编辑器（写代码用的笔记本）。</li><li>打开<b>终端</b>（输入命令的窗口）：在VS Code里选择 Terminal → New Terminal。</li><li>输入上面的命令并按回车。你应该会看到类似 <code>Python 3.13.1</code> 的内容。在Mac上用 <code>python3</code> 代替 <code>python</code>。</li></ul>`)},
+ {t:T('Create a virtual environment','भर्चुअल वातावरण बनाउनुहोस्','创建虚拟环境'),local:1,code:`mkdir my-agent
+cd my-agent
+python -m venv agent-env`,
+  x:T(`<ul><li><code>mkdir my-agent</code>: make a new folder.</li><li><code>cd my-agent</code>: go inside it.</li><li><code>python -m venv agent-env</code>: create a <b>virtual environment</b> named agent-env.</li></ul><p>A virtual environment is a private toolbox just for this project. Libraries you install go into it, so different projects do not fight over versions.</p>`,
+  `<ul><li><code>mkdir my-agent</code>: नयाँ फोल्डर बनाउँछ।</li><li><code>cd my-agent</code>: त्यसभित्र जान्छ।</li><li><code>python -m venv agent-env</code>: agent-env नामको <b>भर्चुअल वातावरण</b> बनाउँछ।</li></ul><p>भर्चुअल वातावरण भनेको यही प्रोजेक्टका लागि मात्र निजी औजार बाकस हो। तपाईंले इन्स्टल गर्ने लाइब्रेरी यसैभित्र जान्छन्, त्यसैले फरक प्रोजेक्टहरूबीच संस्करणको झगडा हुँदैन।</p>`,
+  `<ul><li><code>mkdir my-agent</code>：新建一个文件夹。</li><li><code>cd my-agent</code>：进入这个文件夹。</li><li><code>python -m venv agent-env</code>：创建一个叫 agent-env 的<b>虚拟环境</b>。</li></ul><p>虚拟环境就是这个项目专用的私人工具箱。你安装的库都放在里面，不同项目之间就不会因为版本冲突而打架。</p>`)},
+ {t:T('Turn it on and install the Claude library','सक्रिय गर्नुहोस् र Claude लाइब्रेरी इन्स्टल गर्नुहोस्','激活它并安装Claude库'),local:1,code:`# Windows:
+agent-env\\Scripts\\activate
+# Mac or Linux:
+source agent-env/bin/activate
+
+pip install anthropic`,
+  x:T(`<p>Run only the activate line for your computer. When it works, you see <code>(agent-env)</code> at the start of the terminal line.</p><p><code>pip</code> is Python's app store for libraries. <code>pip install anthropic</code> downloads the official library for talking to Claude.</p>`,
+  `<p>आफ्नो कम्प्युटरका लागि activate लाइन मात्र चलाउनुहोस्। काम गरेपछि टर्मिनल लाइनको सुरुमा <code>(agent-env)</code> देखिन्छ।</p><p><code>pip</code> भनेको लाइब्रेरीहरूको Python एप स्टोर हो। <code>pip install anthropic</code> ले Claude सँग कुरा गर्ने आधिकारिक लाइब्रेरी डाउनलोड गर्छ।</p>`,
+  `<p>只运行适合你电脑的那一行 activate。成功后，终端每行开头会出现 <code>(agent-env)</code>。</p><p><code>pip</code> 是Python的库"应用商店"。<code>pip install anthropic</code> 会下载和Claude对话的官方库。</p>`)},
+ {t:T('Get an API key','API key लिनुहोस्','获取API密钥'),local:1,code:`# Windows (then close and reopen the terminal):
+setx ANTHROPIC_API_KEY "paste-your-key-here"
+# Mac or Linux:
+export ANTHROPIC_API_KEY="paste-your-key-here"`,
+  x:T(`<p>An <b>API key</b> is a secret password that lets your program use Claude. Create an account on the Claude Platform (link in Resources), add a little credit, and create a key.</p><ul><li><b>Keep it secret.</b> Never put it in code you share or in a screenshot. Anyone with it can spend your money.</li><li>The command saves the key in an <b>environment variable</b>, a setting your computer remembers, so it is not written inside your code.</li></ul>`,
+  `<p><b>API key</b> भनेको तपाईंको प्रोग्रामलाई Claude प्रयोग गर्न दिने गोप्य पासवर्ड हो। Claude Platform मा खाता बनाउनुहोस् (स्रोतहरूमा लिङ्क छ), थोरै क्रेडिट राख्नुहोस्, र key बनाउनुहोस्।</p><ul><li><b>यसलाई गोप्य राख्नुहोस्।</b> सेयर गर्ने कोड वा स्क्रिनसटमा कहिल्यै नराख्नुहोस्। यो भएको जोसुकैले तपाईंको पैसा खर्च गर्न सक्छ।</li><li>यो आदेशले key लाई <b>environment variable</b> मा राख्छ, जुन कम्प्युटरले याद राख्ने सेटिङ हो, त्यसैले key तपाईंको कोडभित्र लेखिँदैन।</li></ul>`,
+  `<p><b>API密钥</b>是一串秘密密码，让你的程序可以使用Claude。在Claude Platform上注册账号（链接在"学习资源"里），充一点钱，然后创建一个密钥。</p><ul><li><b>一定要保密。</b>不要把它放进分享的代码或截图里。拿到它的人可以花你的钱。</li><li>这条命令把密钥存进<b>环境变量</b>（电脑记住的一个设置），这样它就不用写在代码里。</li></ul>`)},
+ {t:T('Your first real AI message','तपाईंको पहिलो साँचो AI सन्देश','你的第一条真正的AI消息'),local:1,code:`import anthropic
+
+client = anthropic.Anthropic()
+
+reply = client.messages.create(
+    model="claude-sonnet-5-5",
+    max_tokens=500,
+    messages=[{"role": "user", "content": "Say hello in Nepali and Chinese."}],
+)
+print(reply.content[0].text)`,
+  x:T(`<p>In VS Code create a file named <code>hello.py</code>, paste this, save, and run <code>python hello.py</code> in the terminal.</p><ul><li><code>anthropic.Anthropic()</code> creates a <b>client</b>, an object that talks to Claude. It finds your key automatically.</li><li><code>model</code>: which Claude brain to use.</li><li><code>max_tokens</code>: the longest answer allowed. A <b>token</b> is a small piece of a word.</li><li><code>messages</code>: a list of message dictionaries, exactly like Lesson 3!</li></ul>`,
+  `<p>VS Code मा <code>hello.py</code> नामको फाइल बनाउनुहोस्, यो पेस्ट गर्नुहोस्, सेभ गर्नुहोस्, र टर्मिनलमा <code>python hello.py</code> चलाउनुहोस्।</p><ul><li><code>anthropic.Anthropic()</code> ले <b>client</b> बनाउँछ, Claude सँग कुरा गर्ने अब्जेक्ट। यसले तपाईंको key आफैँ भेट्छ।</li><li><code>model</code>: कुन Claude दिमाग प्रयोग गर्ने।</li><li><code>max_tokens</code>: उत्तर बढीमा कति लामो हुन सक्छ। <b>टोकन</b> भनेको शब्दको सानो टुक्रा हो।</li><li><code>messages</code>: सन्देश डिक्सनरीहरूको सूची, ठ्याक्कै पाठ ३ जस्तै!</li></ul>`,
+  `<p>在VS Code里新建一个文件叫 <code>hello.py</code>，把这段代码粘贴进去，保存，然后在终端运行 <code>python hello.py</code>。</p><ul><li><code>anthropic.Anthropic()</code> 创建一个<b>客户端</b>，也就是和Claude对话的对象。它会自动找到你的密钥。</li><li><code>model</code>：用哪个Claude大脑。</li><li><code>max_tokens</code>：回答最长允许多长。<b>Token（词元）</b>是一小块词语。</li><li><code>messages</code>：消息字典组成的列表，和第3课一模一样！</li></ul>`)},
+ {t:T('The full real agent','पूरा साँचो एजेन्ट','完整的真正智能体'),local:1,code:`import anthropic
+from datetime import datetime
+
+client = anthropic.Anthropic()
+
+def calculator(a, b):
+    return a + b
+
+def clock():
+    return datetime.now().strftime("%H:%M")
+
+tools = [
+    {"name": "calculator", "description": "Add two numbers.",
+     "input_schema": {"type": "object",
+                      "properties": {"a": {"type": "number"}, "b": {"type": "number"}},
+                      "required": ["a", "b"]}},
+    {"name": "clock", "description": "Get the current time.",
+     "input_schema": {"type": "object", "properties": {}}},
+]
+
+memory = []
+
+def ask(question):
+    memory.append({"role": "user", "content": question})
+    while True:
+        reply = client.messages.create(
+            model="claude-sonnet-5-5",
+            max_tokens=1000,
+            tools=tools,
+            messages=memory,
+        )
+        memory.append({"role": "assistant", "content": reply.content})
+        if reply.stop_reason != "tool_use":
+            return "".join(b.text for b in reply.content if b.type == "text")
+        results = []
+        for block in reply.content:
+            if block.type == "tool_use":
+                if block.name == "calculator":
+                    out = calculator(block.input["a"], block.input["b"])
+                else:
+                    out = clock()
+                results.append({"type": "tool_result",
+                                "tool_use_id": block.id,
+                                "content": str(out)})
+        memory.append({"role": "user", "content": results})
+
+while True:
+    q = input("You: ")
+    if q == "quit":
+        break
+    print("Agent:", ask(q))`,
+  x:T(`<p>Save as <code>agent.py</code> and run <code>python agent.py</code>. Type questions; type <code>quit</code> to stop. Everything here is something you already learned:</p><ul><li><b>tools</b>: a list of dictionaries describing each tool, so Claude knows what it can use. <code>input_schema</code> says what inputs the tool needs.</li><li><b>memory</b>: the message list (Lesson 11).</li><li><b>the loop</b> <code>while True</code>: ask Claude. If Claude wants a tool (<code>stop_reason == "tool_use"</code>), run it, add the result to memory, and ask again. If not, return Claude's text answer. This is think → act → check, repeat.</li><li><code>input("You: ")</code> waits for you to type.</li></ul><p>Now Claude is the brain: it understands "what's twelve and thirty together?" without any keywords.</p>`,
+  `<p><code>agent.py</code> नाममा सेभ गरेर <code>python agent.py</code> चलाउनुहोस्। प्रश्न टाइप गर्नुहोस्; रोक्न <code>quit</code> टाइप गर्नुहोस्। यहाँ भएको सबै कुरा तपाईंले सिकिसक्नुभएको छ:</p><ul><li><b>tools</b>: हरेक औजारको वर्णन गर्ने डिक्सनरीहरूको सूची, ताकि Claude लाई के प्रयोग गर्न सकिन्छ थाहा होस्। <code>input_schema</code> ले औजारलाई कस्तो इनपुट चाहिन्छ भन्छ।</li><li><b>memory</b>: सन्देशको सूची (पाठ ११)।</li><li><b>लुप</b> <code>while True</code>: Claude लाई सोध्छ। Claude लाई औजार चाहियो भने (<code>stop_reason == "tool_use"</code>), त्यो चलाउँछ, नतिजा मेमोरीमा थप्छ, र फेरि सोध्छ। नचाहिए Claude को अक्षरको उत्तर फर्काउँछ। यही हो सोच → गर → जाँच, दोहोर्‍याउ।</li><li><code>input("You: ")</code> ले तपाईंले टाइप गर्ने पर्खन्छ।</li></ul><p>अब Claude दिमाग हो: कुनै मुख्य शब्द बिना पनि "बाह्र र तीस मिलाउँदा कति?" बुझ्छ।</p>`,
+  `<p>保存为 <code>agent.py</code>，然后运行 <code>python agent.py</code>。输入问题；输入 <code>quit</code> 退出。这里的每样东西你都已经学过了：</p><ul><li><b>tools</b>：描述每个工具的字典列表，让Claude知道它能用什么。<code>input_schema</code> 说明工具需要什么输入。</li><li><b>memory</b>：消息列表（第11课）。</li><li><b>循环</b> <code>while True</code>：问Claude。如果Claude要用工具（<code>stop_reason == "tool_use"</code>），就运行工具，把结果加进记忆，再问一次。否则就返回Claude的文字回答。这就是"思考 → 行动 → 检查，重复"。</li><li><code>input("You: ")</code> 等你输入。</li></ul><p>现在Claude就是大脑了：不需要关键词，它也能听懂"十二和三十合起来是多少？"。</p>`)},
+ {t:T('What to learn next','अब के सिक्ने','接下来学什么'),
+  x:T(`<ul><li>Add a new tool: a weather tool, a notes tool that saves to a file, a translator.</li><li>Add a <b>system prompt</b>: instructions that set your agent's personality, for example "You are a friendly tutor who answers in Nepali".</li><li>Read Anthropic's "Building effective agents" and the tool-use docs (Resources tab).</li><li>Connect your agent to your HarbourWatch or school projects.</li></ul><p>You started knowing nothing about code. You now understand variables, lists, dictionaries, decisions, loops, functions, classes, JSON, APIs and agents. Well done!</p>`,
+  `<ul><li>नयाँ औजार थप्नुहोस्: मौसम औजार, फाइलमा सुरक्षित गर्ने नोट औजार, अनुवादक।</li><li><b>सिस्टम प्रम्प्ट</b> थप्नुहोस्: एजेन्टको स्वभाव तोक्ने निर्देशन, जस्तै "तिमी नेपालीमा उत्तर दिने मिलनसार शिक्षक हौ"।</li><li>Anthropic को "Building effective agents" र tool-use कागजात पढ्नुहोस् (स्रोतहरू ट्याब)।</li><li>आफ्नो एजेन्टलाई अरू प्रोजेक्टसँग जोड्नुहोस्।</li></ul><p>तपाईंले कोडबारे केही नजानी सुरु गर्नुभयो। अब भेरिएबल, सूची, डिक्सनरी, निर्णय, लुप, फङ्सन, क्लास, JSON, API र एजेन्ट बुझ्नुहुन्छ। स्याबास!</p>`,
+  `<ul><li>添加新工具：天气工具、把笔记存到文件的工具、翻译工具。</li><li>添加<b>系统提示词</b>：设定智能体性格的指令，比如"你是一位用中文回答的友好老师"。</li><li>阅读Anthropic的《Building effective agents》和工具使用文档（见"学习资源"）。</li><li>把你的智能体用到其他项目里。</li></ul><p>你一开始对代码一无所知。现在你已经懂得变量、列表、字典、判断、循环、函数、类、JSON、API和智能体。太棒了！</p>`)}
+ ]}
+];
+
+/* ---------- advanced track (topics follow SMU MBAN Agentic AI curriculum outline) ---------- */
+const GRAPH_PRE=`class MiniGraph:
+    def __init__(self):
+        self.nodes = {}
+        self.edges = {}
+
+    def add_node(self, name, func):
+        self.nodes[name] = func
+
+    def add_edge(self, start, end):
+        self.edges[start] = end
+
+    def invoke(self, state):
+        current = self.edges["START"]
+        while current != "END":
+            print("Running:", current)
+            state = self.nodes[current](state)
+            nxt = self.edges[current]
+            current = nxt(state) if callable(nxt) else nxt
+        return state`;
+const TRACK2=T('Advanced track: frameworks, graphs and real projects','उन्नत खण्ड: फ्रेमवर्क, ग्राफ र साँचो प्रोजेक्ट','进阶部分：框架、图和真实项目');
+const MODS2=[
+{track:TRACK2,t:T('Good-to-know foundations','जान्नैपर्ने आधारभूत कुरा','必须了解的基础知识'),
+ d:T('Words and ideas every agent builder uses: tokens, context, temperature, system prompts and structured output.','हरेक एजेन्ट बनाउनेले प्रयोग गर्ने शब्द र विचार: टोकन, कन्टेक्स्ट, टेम्परेचर, सिस्टम प्रम्प्ट र संरचित आउटपुट।','每个智能体开发者都会用到的概念：token、上下文、温度、系统提示词和结构化输出。'),
+ s:[
+ {t:T('How an LLM really works (in simple words)','LLM साँच्चै कसरी काम गर्छ (सजिलो भाषामा)','大语言模型到底是怎么工作的（通俗版）'),
+  x:T(`<ul><li><b>It predicts the next piece of text.</b> An LLM reads your words and guesses, very cleverly, what should come next, one <b>token</b> (a small piece of a word) at a time.</li><li><b>Context window</b>: how much text it can look at in one go, like the size of its desk. Everything it needs (instructions, memory, tool results) must fit on the desk.</li><li><b>Temperature</b>: a setting for creativity. Low = careful and repeatable. High = more creative and surprising.</li><li><b>Hallucination</b>: when the model says something false in a confident voice. This is why agents use tools (a calculator is never wrong about 2+2) and why we test them.</li><li><b>No built-in memory</b>: the model forgets everything between calls. Your code must send the history each time (Lesson 11).</li></ul>`,
+  `<ul><li><b>यसले अर्को अक्षरको अनुमान गर्छ।</b> LLM ले तपाईंका शब्द पढ्छ र अब के आउनुपर्छ भनेर, एक-एक <b>टोकन</b> (शब्दको सानो टुक्रा) गर्दै, निकै चलाखीपूर्वक अनुमान गर्छ।</li><li><b>कन्टेक्स्ट विन्डो</b>: एकै पटकमा कति अक्षर हेर्न सक्छ, यसको टेबलको आकार जस्तै। चाहिने सबै कुरा (निर्देशन, मेमोरी, औजारको नतिजा) टेबलमा अटाउनुपर्छ।</li><li><b>टेम्परेचर</b>: सिर्जनशीलताको सेटिङ। कम = होसियार र उस्तै उत्तर। धेरै = बढी सिर्जनशील र अचम्मको।</li><li><b>ह्यालुसिनेसन</b>: मोडेलले विश्वासका साथ झुटो कुरा भन्नु। त्यसैले एजेन्टले औजार प्रयोग गर्छ (क्याल्कुलेटरले 2+2 मा कहिल्यै गल्ती गर्दैन) र त्यसैले हामी परीक्षण गर्छौँ।</li><li><b>आफ्नै मेमोरी हुँदैन</b>: मोडेलले हरेक कलबीच सबै बिर्सन्छ। तपाईंको कोडले हरेक पटक इतिहास पठाउनुपर्छ (पाठ ११)।</li></ul>`,
+  `<ul><li><b>它在预测下一段文字。</b>大语言模型读你的话，然后非常聪明地猜接下来应该是什么，一次一个 <b>token</b>（一小块词）。</li><li><b>上下文窗口</b>：它一次能看多少文字，就像它书桌的大小。它需要的一切（指令、记忆、工具结果）都必须放得下。</li><li><b>温度（temperature）</b>：控制创造力的设置。低 = 谨慎、每次差不多。高 = 更有创意、更出人意料。</li><li><b>幻觉（hallucination）</b>：模型用很自信的语气说错话。这就是智能体要用工具（计算器算2+2永远不会错）、也要做测试的原因。</li><li><b>没有自带记忆</b>：每次调用之间模型什么都不记得。你的代码每次都要把历史发过去（第11课）。</li></ul>`)},
+ {t:T('System prompt + messages','सिस्टम प्रम्प्ट + सन्देशहरू','系统提示词 + 消息'),code:`system_prompt = "You are Sathi, a friendly tutor. Answer in simple words."
+messages = [
+    {"role": "user", "content": "What is an API?"},
+]
+print("System:", system_prompt)
+for m in messages:
+    print(m["role"], "->", m["content"])`,out:`System: You are Sathi, a friendly tutor. Answer in simple words.
+user -> What is an API?`,
+  x:T(`<p>The <b>system prompt</b> is the job description you give the AI before the chat starts: who it is, how to talk, what rules to follow. The <b>messages</b> list is the conversation. Every real agent request has these two parts.</p><p>A list can be written over several lines. The comma after the last item is allowed.</p>`,
+  `<p><b>सिस्टम प्रम्प्ट</b> भनेको कुराकानी सुरु हुनुअघि AI लाई दिइने कामको विवरण हो: ऊ को हो, कसरी बोल्ने, कुन नियम मान्ने। <b>messages</b> सूची कुराकानी हो। हरेक साँचो एजेन्ट अनुरोधमा यी दुई भाग हुन्छन्।</p><p>सूचीलाई धेरै लाइनमा लेख्न सकिन्छ। अन्तिम वस्तुपछिको अल्पविराम पनि चल्छ।</p>`,
+  `<p><b>系统提示词</b>是聊天开始前给AI的"岗位说明"：它是谁、怎么说话、要遵守什么规则。<b>messages</b> 列表就是对话内容。每个真正的智能体请求都有这两部分。</p><p>列表可以分多行写，最后一项后面的逗号也是允许的。</p>`)},
+ {t:T('Counting tokens (roughly)','टोकन गन्ने (अन्दाजी)','粗略地数 token'),code:`text = "AI agents use tools to get real work done."
+words = text.split()
+print("Words:", len(words))
+print("Rough tokens:", round(len(words) * 1.3))`,out:`Words: 9
+Rough tokens: 12`,
+  x:T(`<p>AI services count usage in tokens, and you pay per token. For English, a rough rule is about 1.3 tokens per word (Nepali and Chinese usually use more tokens per word). <code>round( )</code> rounds to the nearest whole number. This is only an estimate; the real count comes from the AI service.</p>`,
+  `<p>AI सेवाले प्रयोग टोकनमा गन्छ, र तपाईं टोकनअनुसार तिर्नुहुन्छ। अंग्रेजीका लागि अन्दाजी नियम: एक शब्द ≈ 1.3 टोकन (नेपाली र चिनियाँमा प्रायः शब्दैपिच्छे बढी टोकन लाग्छ)। <code>round( )</code> ले नजिकको पूर्ण संख्या बनाउँछ। यो अनुमान मात्र हो; साँचो गन्ती AI सेवाबाट आउँछ।</p>`,
+  `<p>AI服务按token计算用量，也按token收费。英文大约是每个词1.3个token（尼泊尔语和中文通常每个词用的token更多）。<code>round( )</code> 四舍五入成整数。这只是估算，真实数量以AI服务给出的为准。</p>`)},
+ {t:T('Structured output: check the AI’s JSON','संरचित आउटपुट: AI को JSON जाँच्नुहोस्','结构化输出：检查AI返回的JSON'),code:`import json
+
+reply = '{"name": "Asha", "day": "Monday", "time": "10:00"}'
+data = json.loads(reply)
+needed = ["name", "day", "time", "doctor"]
+for key in needed:
+    if key in data:
+        print("OK:", key, "=", data[key])
+    else:
+        print("Missing:", key)`,out:`OK: name = Asha
+OK: day = Monday
+OK: time = 10:00
+Missing: doctor`,
+  x:T(`<p><b>Structured output</b> means asking the AI to answer in a fixed shape (like JSON with certain keys) so your code can use it. Never trust it blindly: always check every key you need is really there. Here "doctor" is missing, so a real agent would ask the user for it.</p>`,
+  `<p><b>संरचित आउटपुट</b> भनेको AI लाई तोकिएको ढाँचामा (जस्तै निश्चित key भएको JSON) उत्तर दिन लगाउनु हो, ताकि तपाईंको कोडले प्रयोग गर्न सकोस्। आँखा चिम्लेर विश्वास नगर्नुहोस्: चाहिने हरेक key साँच्चै छ कि छैन सधैँ जाँच्नुहोस्। यहाँ "doctor" छुटेको छ, त्यसैले साँचो एजेन्टले प्रयोगकर्तालाई सोध्छ।</p>`,
+  `<p><b>结构化输出</b>就是要求AI按固定的格式回答（比如带有指定键的JSON），这样你的代码才能使用。千万不要盲目相信：一定要检查需要的每个键是否真的存在。这里缺少"doctor"，所以真正的智能体会去问用户。</p>`)}
+ ]},
+{t:T('Introduction to LangChain','LangChain को परिचय','LangChain 入门'),
+ d:T('LangChain is a ready-made kit for building agents. First we build a tiny version ourselves, so nothing feels like magic.','LangChain एजेन्ट बनाउने तयारी किट हो। पहिले हामी आफैँ सानो संस्करण बनाउँछौँ, ताकि केही पनि जादु जस्तो नलागोस्।','LangChain是搭建智能体的现成工具包。我们先自己做一个迷你版，这样就不会觉得它很神秘。'),
+ s:[
+ {t:T('What is a framework?','फ्रेमवर्क भनेको के हो?','什么是框架？'),
+  x:T(`<p>In Lesson 12 you wrote the agent loop yourself: call the model, check for tool use, run the tool, send the result back, repeat. A <b>framework</b> like <b>LangChain</b> has that loop already written and tested, so you only describe your tools and instructions.</p><p>Its main pieces:</p><ul><li><code>@tool</code>: turns a normal Python function into a tool. The <b>docstring</b> (the text in triple quotes) tells the AI what the tool does.</li><li><code>create_agent(...)</code>: builds the agent from a model, tools and a system prompt.</li><li><code>agent.invoke(...)</code>: runs it.</li></ul><p>It also works with many AI companies, so you can switch models by changing one word.</p>`,
+  `<p>पाठ १२ मा तपाईंले एजेन्ट लुप आफैँ लेख्नुभयो: मोडेललाई बोलाउने, औजार चाहियो कि हेर्ने, औजार चलाउने, नतिजा फिर्ता पठाउने, दोहोर्‍याउने। <b>LangChain</b> जस्तो <b>फ्रेमवर्क</b>मा त्यो लुप पहिले नै लेखिएको र परीक्षण गरिएको हुन्छ, त्यसैले तपाईंले आफ्ना औजार र निर्देशन मात्र बताउनुपर्छ।</p><p>यसका मुख्य भाग:</p><ul><li><code>@tool</code>: साधारण Python फङ्सनलाई औजार बनाउँछ। <b>docstring</b> (तीन उद्धरण चिह्नभित्रको अक्षर) ले औजारले के गर्छ भनेर AI लाई बताउँछ।</li><li><code>create_agent(...)</code>: मोडेल, औजार र सिस्टम प्रम्प्टबाट एजेन्ट बनाउँछ।</li><li><code>agent.invoke(...)</code>: त्यसलाई चलाउँछ।</li></ul><p>यो धेरै AI कम्पनीसँग चल्छ, त्यसैले एउटा शब्द बदलेर मोडेल फेर्न सकिन्छ।</p>`,
+  `<p>在第12课里，你亲手写了智能体循环：调用模型、检查是否要用工具、运行工具、把结果发回去、重复。像 <b>LangChain</b> 这样的<b>框架</b>已经把这个循环写好并测试过了，你只需要描述你的工具和指令。</p><p>它的主要部分：</p><ul><li><code>@tool</code>：把普通的Python函数变成工具。<b>文档字符串（docstring）</b>（三引号里的文字）告诉AI这个工具是做什么的。</li><li><code>create_agent(...)</code>：用模型、工具和系统提示词搭建智能体。</li><li><code>agent.invoke(...)</code>：运行它。</li></ul><p>它支持很多AI公司的模型，改一个词就能换模型。</p>`)},
+ {t:T('Build our own mini @tool','आफ्नै सानो @tool बनाउनुहोस्','自己做一个迷你 @tool'),code:`TOOLS = {}
+
+def tool(func):
+    TOOLS[func.__name__] = func
+    return func
+
+@tool
+def get_weather(city):
+    """Get the weather for a city."""
+    return f"It is sunny in {city}."
+
+print(list(TOOLS.keys()))
+print(TOOLS["get_weather"].__doc__)
+print(TOOLS["get_weather"]("Kathmandu"))`,out:`['get_weather']
+Get the weather for a city.
+It is sunny in Kathmandu.`,
+  x:T(`<ul><li><code>tool</code> is a function that receives another function, saves it in the TOOLS dictionary under its name (<code>func.__name__</code>), and gives it back unchanged.</li><li><code>@tool</code> written above a function is called a <b>decorator</b>. It means "pass this function through tool()". LangChain's real <code>@tool</code> works on the same idea (and does much more).</li><li><code>"""..."""</code> right under def is the <b>docstring</b>. <code>.__doc__</code> reads it. The AI reads it to decide when to use the tool, so write it clearly!</li></ul>`,
+  `<ul><li><code>tool</code> एउटा फङ्सन हो जसले अर्को फङ्सन लिन्छ, त्यसको नाम (<code>func.__name__</code>) अनुसार TOOLS डिक्सनरीमा राख्छ, र जस्ताको तस्तै फिर्ता दिन्छ।</li><li>फङ्सनमाथि लेखिएको <code>@tool</code> लाई <b>डेकोरेटर</b> भनिन्छ। यसको अर्थ "यो फङ्सनलाई tool() बाट पार गर" हो। LangChain को साँचो <code>@tool</code> पनि यही विचारमा चल्छ (र धेरै काम गर्छ)।</li><li>def को ठीक तल रहेको <code>"""..."""</code> <b>docstring</b> हो। <code>.__doc__</code> ले त्यसलाई पढ्छ। औजार कहिले चलाउने भनेर AI ले यही पढ्छ, त्यसैले स्पष्ट लेख्नुहोस्!</li></ul>`,
+  `<ul><li><code>tool</code> 是一个函数：它接收另一个函数，按名字（<code>func.__name__</code>）存进 TOOLS 字典，再原样返回。</li><li>写在函数上面的 <code>@tool</code> 叫做<b>装饰器</b>，意思是"让这个函数经过 tool() 处理一下"。LangChain 真正的 <code>@tool</code> 也是这个思路（而且功能多得多）。</li><li>def 下面紧跟的 <code>"""..."""</code> 是<b>文档字符串</b>，<code>.__doc__</code> 可以读取它。AI会读它来判断什么时候用这个工具，所以要写清楚！</li></ul>`)},
+ {t:T('Build our own mini create_agent','आफ्नै सानो create_agent बनाउनुहोस्','自己做一个迷你 create_agent'),code:`def create_agent(tools, system_prompt):
+    def invoke(question):
+        q = question.lower()
+        for name, func in tools.items():
+            if name.split("_")[1] in q:
+                city = question.split()[-1].strip("?")
+                return func(city)
+        return "Sorry, I have no tool for that."
+    return invoke
+
+agent = create_agent(TOOLS, "You are a helpful assistant")
+print(agent("What is the weather in Pokhara?"))
+print(agent("Tell me a joke"))`,out:`It is sunny in Pokhara.
+Sorry, I have no tool for that.`,
+  x:T(`<ul><li><code>create_agent</code> builds and <b>returns a function</b> called invoke. Functions can make other functions!</li><li><code>tools.items()</code> gives each (name, function) pair from the dictionary.</li><li><code>"get_weather".split("_")[1]</code> is "weather", our pretend keyword.</li><li><code>question.split()[-1]</code> is the last word. <code>[-1]</code> means "count from the end".</li></ul><p>The real LangChain uses a real AI model instead of keywords, but the shape is the same: tools + instructions in, an agent out.</p>`,
+  `<ul><li><code>create_agent</code> ले invoke नामको <b>फङ्सन बनाएर फर्काउँछ</b>। फङ्सनले अर्को फङ्सन बनाउन सक्छ!</li><li><code>tools.items()</code> ले डिक्सनरीको हरेक (नाम, फङ्सन) जोडी दिन्छ।</li><li><code>"get_weather".split("_")[1]</code> भनेको "weather" हो, हाम्रो नक्कली मुख्य शब्द।</li><li><code>question.split()[-1]</code> अन्तिम शब्द हो। <code>[-1]</code> को अर्थ "अन्त्यबाट गन" हो।</li></ul><p>साँचो LangChain ले मुख्य शब्दको सट्टा साँचो AI मोडेल प्रयोग गर्छ, तर आकार उही हो: औजार + निर्देशन भित्र, एजेन्ट बाहिर।</p>`,
+  `<ul><li><code>create_agent</code> 创建并<b>返回一个函数</b>，叫 invoke。函数可以制造别的函数！</li><li><code>tools.items()</code> 给出字典里的每一对（名字, 函数）。</li><li><code>"get_weather".split("_")[1]</code> 就是 "weather"，我们假装的关键词。</li><li><code>question.split()[-1]</code> 是最后一个词，<code>[-1]</code> 表示"从末尾数"。</li></ul><p>真正的LangChain用真正的AI模型而不是关键词，但结构是一样的：输入工具和指令，得到一个智能体。</p>`)},
+ {t:T('Install LangChain','LangChain इन्स्टल गर्नुहोस्','安装 LangChain'),local:1,code:`pip install -U langchain langchain-anthropic langgraph`,
+  x:T(`<p>On your computer, turn on your virtual environment first (Lesson 12), then run this. <code>-U</code> means "upgrade to the newest version". <code>langchain-anthropic</code> lets LangChain talk to Claude. <code>langgraph</code> is used in the next lessons.</p>`,
+  `<p>आफ्नो कम्प्युटरमा पहिले भर्चुअल वातावरण सक्रिय गर्नुहोस् (पाठ १२), अनि यो चलाउनुहोस्। <code>-U</code> को अर्थ "नयाँ संस्करणमा अपग्रेड गर" हो। <code>langchain-anthropic</code> ले LangChain लाई Claude सँग जोड्छ। <code>langgraph</code> अर्को पाठहरूमा प्रयोग हुन्छ।</p>`,
+  `<p>在你的电脑上，先激活虚拟环境（第12课），再运行这条命令。<code>-U</code> 表示"升级到最新版本"。<code>langchain-anthropic</code> 让LangChain可以和Claude对话。<code>langgraph</code> 会在后面几课用到。</p>`)},
+ {t:T('Your first real LangChain agent','तपाईंको पहिलो साँचो LangChain एजेन्ट','你的第一个真正的LangChain智能体'),local:1,code:`from langchain.agents import create_agent
+from langchain.tools import tool
+
+@tool
+def get_weather(city: str) -> str:
+    """Get the weather for a city."""
+    return f"It is sunny in {city}."
+
+agent = create_agent(
+    model="anthropic:claude-sonnet-5-5",
+    tools=[get_weather],
+    system_prompt="You are a helpful assistant. Answer simply.",
+)
+
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "What is the weather in Pokhara?"}]}
+)
+print(result["messages"][-1].content)`,
+  x:T(`<p>Save as <code>lc_agent.py</code> and run it (your API key must be set, Lesson 12). Compare with Lesson 12: about 50 lines became about 15.</p><ul><li><code>city: str</code> and <code>-> str</code> are <b>type hints</b>: labels saying "city is text, the answer is text". LangChain reads them to tell the AI what inputs the tool needs.</li><li><code>"anthropic:claude-sonnet-5-5"</code> = company : model name.</li><li>The result holds all messages; <code>[-1]</code> is the last one, the final answer.</li></ul>`,
+  `<p><code>lc_agent.py</code> नाममा सेभ गरेर चलाउनुहोस् (API key सेट भएको हुनुपर्छ, पाठ १२)। पाठ १२ सँग तुलना गर्नुहोस्: करिब ५० लाइन करिब १५ लाइन भयो।</p><ul><li><code>city: str</code> र <code>-> str</code> <b>टाइप हिन्ट</b> हुन्: "city अक्षर हो, उत्तर अक्षर हो" भन्ने लेबल। औजारलाई कस्तो इनपुट चाहिन्छ भनेर AI लाई बताउन LangChain ले यिनलाई पढ्छ।</li><li><code>"anthropic:claude-sonnet-5-5"</code> = कम्पनी : मोडेलको नाम।</li><li>नतिजामा सबै सन्देश हुन्छन्; <code>[-1]</code> अन्तिम हो, अर्थात् अन्तिम उत्तर।</li></ul>`,
+  `<p>保存为 <code>lc_agent.py</code> 并运行（需要先设置好API密钥，见第12课）。和第12课比一比：大约50行变成了大约15行。</p><ul><li><code>city: str</code> 和 <code>-> str</code> 是<b>类型提示</b>：表示"city是文字，返回的也是文字"。LangChain会读取它们，告诉AI这个工具需要什么输入。</li><li><code>"anthropic:claude-sonnet-5-5"</code> = 公司 : 模型名。</li><li>结果里包含所有消息；<code>[-1]</code> 是最后一条，也就是最终回答。</li></ul>`)}
+ ]},
+{t:T('Middleware','मिडलवेयर','中间件（Middleware）'),
+ d:T('Middleware is a checkpoint that runs before or after each step, so you can log, limit, check or pause the agent.','मिडलवेयर हरेक चरणअघि वा पछि चल्ने जाँच-चौकी हो, जसले एजेन्टलाई रेकर्ड गर्न, सीमित गर्न, जाँच्न वा रोक्न दिन्छ।','中间件是在每一步之前或之后运行的"检查站"，可以用来记录、限制、检查或暂停智能体。'),
+ s:[
+ {t:T('Checkpoints around every step','हरेक चरण वरिपरि जाँच-चौकी','每一步周围的检查站'),
+  x:T(`<p>Imagine an airport. Before you board (before the step), security checks your bag. After you land (after the step), customs checks again. <b>Middleware</b> is the same for agents. Common uses:</p><ul><li><b>Logging</b>: write down every step so you can see what happened.</li><li><b>Limits</b>: stop after too many tool calls so it does not loop forever or spend too much money.</li><li><b>Summarizing</b>: shorten old messages when the context window gets full.</li><li><b>Safety</b>: block bad inputs, hide private data.</li><li><b>Human approval</b>: pause and ask a person before an important action.</li></ul><p>In LangChain, the main hook points are <code>before_model</code>, <code>after_model</code> and <code>wrap_tool_call</code>.</p>`,
+  `<p>एयरपोर्ट सम्झनुहोस्। जहाज चढ्नुअघि (चरणअघि) सुरक्षाले झोला जाँच्छ। अवतरणपछि (चरणपछि) भन्सारले फेरि जाँच्छ। एजेन्टका लागि <b>मिडलवेयर</b> पनि यस्तै हो। सामान्य प्रयोग:</p><ul><li><b>रेकर्ड (logging)</b>: के भयो हेर्न हरेक चरण लेखेर राख्ने।</li><li><b>सीमा</b>: धेरै पटक औजार चलाएपछि रोक्ने, ताकि सधैँभरि लुप नचलोस् वा धेरै पैसा खर्च नहोस्।</li><li><b>सारांश</b>: कन्टेक्स्ट विन्डो भरिँदा पुराना सन्देश छोट्याउने।</li><li><b>सुरक्षा</b>: खराब इनपुट रोक्ने, निजी डाटा लुकाउने।</li><li><b>मानिसको स्वीकृति</b>: महत्त्वपूर्ण काम गर्नुअघि रोकेर मान्छेलाई सोध्ने।</li></ul><p>LangChain मा मुख्य ठाउँहरू <code>before_model</code>, <code>after_model</code> र <code>wrap_tool_call</code> हुन्।</p>`,
+  `<p>想象一下机场。登机前（步骤之前），安检检查你的包；落地后（步骤之后），海关再检查一次。智能体的<b>中间件</b>就是这样。常见用途：</p><ul><li><b>日志</b>：记录每一步，方便查看发生了什么。</li><li><b>限制</b>：工具调用太多次就停止，避免无限循环或花太多钱。</li><li><b>总结</b>：上下文窗口快满时，把旧消息缩短。</li><li><b>安全</b>：拦截不良输入，隐藏隐私数据。</li><li><b>人工审批</b>：在重要操作前暂停，询问人的意见。</li></ul><p>在LangChain里，主要的挂钩点是 <code>before_model</code>、<code>after_model</code> 和 <code>wrap_tool_call</code>。</p>`)},
+ {t:T('A logging middleware','रेकर्ड राख्ने मिडलवेयर','一个记录日志的中间件'),code:`def log_middleware(tool_func):
+    def wrapper(*args):
+        print("[before] calling", tool_func.__name__, "with", args)
+        result = tool_func(*args)
+        print("[after] result:", result)
+        return result
+    return wrapper
+
+def add(a, b):
+    return a + b
+
+safe_add = log_middleware(add)
+safe_add(3, 4)`,out:`[before] calling add with (3, 4)
+[after] result: 7`,
+  x:T(`<ul><li><code>log_middleware</code> takes a tool and returns a new function, <code>wrapper</code>, that wraps around it like gift paper.</li><li><code>*args</code> means "accept any number of inputs" and keeps them together in a <b>tuple</b> <code>(3, 4)</code> (like a list that cannot change).</li><li>The wrapper prints before, calls the real tool, prints after, then passes the result on. The tool itself did not change at all.</li></ul>`,
+  `<ul><li><code>log_middleware</code> ले औजार लिन्छ र <code>wrapper</code> नामको नयाँ फङ्सन फर्काउँछ, जसले उपहारको कागजले जस्तै त्यसलाई बेर्छ।</li><li><code>*args</code> को अर्थ "जति पनि इनपुट लेऊ" हो, र तिनलाई <b>टुपल (tuple)</b> <code>(3, 4)</code> मा सँगै राख्छ (बदल्न नमिल्ने सूची जस्तै)।</li><li>wrapper ले पहिले प्रिन्ट गर्छ, साँचो औजार बोलाउँछ, पछि प्रिन्ट गर्छ, अनि नतिजा अगाडि बढाउँछ। औजार आफैँ अलिकति पनि बदलिएन।</li></ul>`,
+  `<ul><li><code>log_middleware</code> 接收一个工具，返回一个新函数 <code>wrapper</code>，像包装纸一样把它包起来。</li><li><code>*args</code> 表示"接收任意数量的输入"，并把它们放在一个<b>元组（tuple）</b> <code>(3, 4)</code> 里（像一个不能修改的列表）。</li><li>wrapper 先打印，再调用真正的工具，然后再打印，最后把结果传出去。工具本身一点都没变。</li></ul>`)},
+ {t:T('A limit middleware','सीमा लगाउने मिडलवेयर','一个限制次数的中间件'),code:`calls = {"count": 0}
+
+def limit_middleware(tool_func, max_calls):
+    def wrapper(*args):
+        if calls["count"] >= max_calls:
+            return "Stopped: too many tool calls."
+        calls["count"] = calls["count"] + 1
+        return tool_func(*args)
+    return wrapper
+
+limited_add = limit_middleware(add, 2)
+print(limited_add(1, 1))
+print(limited_add(2, 2))
+print(limited_add(3, 3))`,out:`2
+4
+Stopped: too many tool calls.`,
+  x:T(`<p>This wrapper counts calls and refuses after 2. Real agents use limits like this to avoid endless loops and surprise bills. <code>&gt;=</code> means "greater than or equal to". <code>add</code> still exists from the previous step.</p>`,
+  `<p>यो wrapper ले कल गन्छ र २ पटकपछि अस्वीकार गर्छ। अनन्त लुप र अचानक ठूलो बिलबाट बच्न साँचो एजेन्टले यस्तै सीमा प्रयोग गर्छ। <code>&gt;=</code> को अर्थ "ठूलो वा बराबर" हो। <code>add</code> अघिल्लो चरणबाटै छ।</p>`,
+  `<p>这个 wrapper 会计数，超过2次就拒绝。真正的智能体用这样的限制来避免无限循环和意外的高额账单。<code>&gt;=</code> 表示"大于或等于"。<code>add</code> 是上一步定义的，仍然可用。</p>`)},
+ {t:T('Real LangChain middleware','साँचो LangChain मिडलवेयर','真正的LangChain中间件'),local:1,code:`from langchain.agents import create_agent
+from langchain.agents.middleware import before_model, wrap_tool_call
+from langchain.tools import tool
+
+@tool
+def get_weather(city: str) -> str:
+    """Get the weather for a city."""
+    return f"It is sunny in {city}."
+
+@before_model
+def show_count(state, runtime):
+    print("Messages so far:", len(state["messages"]))
+    return None
+
+@wrap_tool_call
+def log_tool(request, handler):
+    print("Running tool:", request.tool_call["name"])
+    return handler(request)
+
+agent = create_agent(
+    model="anthropic:claude-sonnet-5-5",
+    tools=[get_weather],
+    middleware=[show_count, log_tool],
+)
+
+result = agent.invoke({"messages": [{"role": "user", "content": "Weather in Lalitpur?"}]})
+print(result["messages"][-1].content)`,
+  x:T(`<ul><li><code>@before_model</code> runs before every model call. Returning <code>None</code> means "change nothing, carry on".</li><li><code>@wrap_tool_call</code> wraps every tool call, just like our wrapper. <code>handler(request)</code> runs the real tool.</li><li>LangChain also has ready-made middleware, such as <code>SummarizationMiddleware</code> and <code>HumanInTheLoopMiddleware</code> (next lesson).</li></ul>`,
+  `<ul><li><code>@before_model</code> हरेक मोडेल कलअघि चल्छ। <code>None</code> फर्काउनुको अर्थ "केही नबदल, अगाडि बढ" हो।</li><li><code>@wrap_tool_call</code> ले हरेक औजार कललाई बेर्छ, ठ्याक्कै हाम्रो wrapper जस्तै। <code>handler(request)</code> ले साँचो औजार चलाउँछ।</li><li>LangChain मा तयारी मिडलवेयर पनि छन्, जस्तै <code>SummarizationMiddleware</code> र <code>HumanInTheLoopMiddleware</code> (अर्को पाठ)।</li></ul>`,
+  `<ul><li><code>@before_model</code> 在每次调用模型之前运行。返回 <code>None</code> 表示"什么都不改，继续"。</li><li><code>@wrap_tool_call</code> 包住每一次工具调用，就像我们的 wrapper。<code>handler(request)</code> 运行真正的工具。</li><li>LangChain 还有现成的中间件，比如 <code>SummarizationMiddleware</code> 和 <code>HumanInTheLoopMiddleware</code>（下一课）。</li></ul>`)}
+ ]},
+{t:T('Advanced LangChain: memory and human approval','उन्नत LangChain: मेमोरी र मानिसको स्वीकृति','LangChain进阶：记忆和人工审批'),
+ d:T('Keep separate conversations for each user, and make the agent ask a person before risky actions.','हरेक प्रयोगकर्ताको छुट्टै कुराकानी राख्नुहोस्, र जोखिमपूर्ण काम अघि एजेन्टलाई मान्छेसँग सोध्न लगाउनुहोस्।','为每个用户保存独立的对话，并让智能体在执行有风险的操作前先问人。'),
+ s:[
+ {t:T('Threads: one memory per conversation','थ्रेड: हरेक कुराकानीको एउटा मेमोरी','线程：每段对话一份记忆'),code:`threads = {}
+
+def chat(thread_id, text):
+    if thread_id not in threads:
+        threads[thread_id] = []
+    threads[thread_id].append(text)
+    return f"Thread {thread_id} has {len(threads[thread_id])} messages"
+
+print(chat("asha", "Hi"))
+print(chat("asha", "Book a doctor"))
+print(chat("bikash", "Hello"))`,out:`Thread asha has 1 messages
+Thread asha has 2 messages
+Thread bikash has 1 messages`,
+  x:T(`<p>A <b>thread</b> is one conversation. Each thread gets its own memory list, kept in a dictionary by its <b>thread_id</b>. Asha's messages never mix with Bikash's. <code>not in</code> checks that the key is missing.</p><p>In LangChain, a <b>checkpointer</b> stores this memory for you, and you choose the thread with <code>thread_id</code>.</p>`,
+  `<p><b>थ्रेड</b> भनेको एउटा कुराकानी हो। हरेक थ्रेडको आफ्नै मेमोरी सूची हुन्छ, जुन <b>thread_id</b> अनुसार डिक्सनरीमा राखिन्छ। आशाका सन्देश बिकाशकासँग कहिल्यै मिसिँदैनन्। <code>not in</code> ले key छैन भनेर जाँच्छ।</p><p>LangChain मा <b>checkpointer</b> ले तपाईंका लागि यो मेमोरी राख्छ, र <code>thread_id</code> बाट थ्रेड छानिन्छ।</p>`,
+  `<p>一个<b>线程（thread）</b>就是一段对话。每个线程都有自己的记忆列表，按 <b>thread_id</b> 存在字典里。Asha 的消息永远不会和 Bikash 的混在一起。<code>not in</code> 检查这个键是否不存在。</p><p>在LangChain里，<b>checkpointer（检查点保存器）</b>帮你保存这些记忆，你用 <code>thread_id</code> 来选择线程。</p>`)},
+ {t:T('Human in the loop','मानिस लुपभित्र (Human in the loop)','人在回路中（Human in the loop）'),code:`def send_email(to, text):
+    return f"Email sent to {to}"
+
+def ask_human(action):
+    answer = "yes"   # in a real app, a person types this
+    print("Approve:", action, "->", answer)
+    return answer == "yes"
+
+if ask_human("send_email to doctor@clinic.com"):
+    print(send_email("doctor@clinic.com", "Hello"))
+else:
+    print("Cancelled by human")`,out:`Approve: send_email to doctor@clinic.com -> yes
+Email sent to doctor@clinic.com`,
+  x:T(`<p><b>Human in the loop</b> means a person must approve important actions (sending, paying, deleting) before the agent does them. Here we pretend the person typed "yes". Change it to "no" and run again.</p><p><code>answer == "yes"</code> gives True or False, which <code>if</code> uses.</p>`,
+  `<p><b>Human in the loop</b> को अर्थ महत्त्वपूर्ण काम (पठाउने, तिर्ने, मेटाउने) गर्नुअघि मान्छेले स्वीकृति दिनैपर्छ भन्ने हो। यहाँ मान्छेले "yes" टाइप गरेको मानिएको छ। त्यसलाई "no" बनाएर फेरि चलाउनुहोस्।</p><p><code>answer == "yes"</code> ले True वा False दिन्छ, जुन <code>if</code> ले प्रयोग गर्छ।</p>`,
+  `<p><b>人在回路中</b>的意思是：智能体在执行重要操作（发送、付款、删除）之前，必须由人来批准。这里我们假装人输入了"yes"。把它改成"no"再运行试试。</p><p><code>answer == "yes"</code> 的结果是 True 或 False，供 <code>if</code> 使用。</p>`)},
+ {t:T('Real memory and approval in LangChain','LangChain मा साँचो मेमोरी र स्वीकृति','LangChain中真正的记忆和审批'),local:1,code:`from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langchain.tools import tool
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
+
+@tool
+def send_email(to: str, text: str) -> str:
+    """Send an email."""
+    return f"Email sent to {to}"
+
+agent = create_agent(
+    model="anthropic:claude-sonnet-5-5",
+    tools=[send_email],
+    middleware=[HumanInTheLoopMiddleware(interrupt_on={"send_email": True})],
+    checkpointer=InMemorySaver(),
+)
+
+config = {"configurable": {"thread_id": "asha"}}
+agent.invoke(
+    {"messages": [{"role": "user", "content": "Email doctor@clinic.com to say hello"}]},
+    config,
+)
+# The agent paused before sending. A person approves:
+result = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}), config)
+print(result["messages"][-1].content)`,
+  x:T(`<ul><li><code>InMemorySaver()</code> is a checkpointer that keeps memory while the program runs (good for practice; real apps save to a database).</li><li><code>interrupt_on={"send_email": True}</code>: pause before this tool. The name must match the tool's name.</li><li>Use the <b>same thread_id</b> both times, so the agent continues the same conversation.</li><li><code>Command(resume=...)</code> sends the human's decision. Instead of approve you can also reject or edit.</li></ul>`,
+  `<ul><li><code>InMemorySaver()</code> एउटा checkpointer हो जसले प्रोग्राम चलुन्जेल मेमोरी राख्छ (अभ्यासका लागि राम्रो; साँचो एपले डाटाबेसमा सेभ गर्छ)।</li><li><code>interrupt_on={"send_email": True}</code>: यो औजारअघि रोक। नाम औजारको नामसँग मिल्नुपर्छ।</li><li>दुवै पटक <b>उही thread_id</b> प्रयोग गर्नुहोस्, ताकि एजेन्टले उही कुराकानी अगाडि बढाओस्।</li><li><code>Command(resume=...)</code> ले मान्छेको निर्णय पठाउँछ। approve को सट्टा reject (अस्वीकार) वा edit (सम्पादन) पनि गर्न सकिन्छ।</li></ul>`,
+  `<ul><li><code>InMemorySaver()</code> 是一个在程序运行期间保存记忆的检查点保存器（适合练习；真正的应用会存到数据库里）。</li><li><code>interrupt_on={"send_email": True}</code>：在这个工具之前暂停。名字必须和工具名一致。</li><li>两次都用<b>同一个 thread_id</b>，这样智能体才会继续同一段对话。</li><li><code>Command(resume=...)</code> 发送人的决定。除了 approve（批准），还可以 reject（拒绝）或 edit（修改）。</li></ul>`)}
+ ]},
+{t:T('Introduction to LangGraph','LangGraph को परिचय','LangGraph 入门'),
+ d:T('LangGraph draws your agent as a map of steps. You decide exactly which step comes next.','LangGraph ले तपाईंको एजेन्टलाई चरणहरूको नक्साको रूपमा बनाउँछ। अर्को चरण कुन हो भनेर तपाईं ठ्याक्कै तय गर्नुहुन्छ।','LangGraph把智能体画成一张"步骤地图"，由你精确决定下一步做什么。'),
+ s:[
+ {t:T('Nodes, edges and state','नोड, एज र स्टेट','节点、边和状态'),
+  x:T(`<p>Think of a bus route map:</p><ul><li><b>Node</b> = a bus stop = one step (a Python function), for example "classify the question" or "book the appointment".</li><li><b>Edge</b> = the road between stops = what happens next.</li><li><b>Conditional edge</b> = a crossroads: a small function looks at the situation and picks which road to take.</li><li><b>State</b> = a shared backpack that travels with the bus. Every node can read it and add things to it.</li><li><b>START</b> and <b>END</b> = where the trip begins and finishes.</li></ul><p>Why use a graph? Because you can <b>see and control</b> every path, add loops, pause for humans, and connect several agents. Businesses like this because it is predictable.</p>`,
+  `<p>बस रुटको नक्सा सम्झनुहोस्:</p><ul><li><b>नोड (node)</b> = बस बिसौनी = एउटा चरण (Python फङ्सन), जस्तै "प्रश्न वर्गीकरण गर्ने" वा "अपोइन्टमेन्ट बुक गर्ने"।</li><li><b>एज (edge)</b> = बिसौनीबीचको सडक = अब के हुन्छ।</li><li><b>सर्तसहितको एज</b> = चौबाटो: सानो फङ्सनले स्थिति हेरेर कुन सडक लिने छान्छ।</li><li><b>स्टेट (state)</b> = बससँगै यात्रा गर्ने साझा झोला। हरेक नोडले यसलाई पढ्न र यसमा कुरा थप्न सक्छ।</li><li><b>START</b> र <b>END</b> = यात्रा सुरु र अन्त्य हुने ठाउँ।</li></ul><p>ग्राफ किन? किनकि तपाईं हरेक बाटो <b>देख्न र नियन्त्रण गर्न</b> सक्नुहुन्छ, लुप थप्न, मान्छेका लागि रोक्न, र धेरै एजेन्ट जोड्न सक्नुहुन्छ। यो भरपर्दो भएकाले व्यवसायहरूलाई मन पर्छ।</p>`,
+  `<p>想象一张公交线路图：</p><ul><li><b>节点（node）</b> = 公交站 = 一个步骤（一个Python函数），比如"给问题分类"或"预约挂号"。</li><li><b>边（edge）</b> = 站与站之间的路 = 接下来发生什么。</li><li><b>条件边</b> = 十字路口：一个小函数看看情况，决定走哪条路。</li><li><b>状态（state）</b> = 跟着公交车走的共享背包，每个节点都可以读取它、往里面放东西。</li><li><b>START</b> 和 <b>END</b> = 旅程的起点和终点。</li></ul><p>为什么用图？因为你可以<b>看清并控制</b>每一条路径，可以加循环、暂停等人确认、连接多个智能体。企业喜欢它，因为它可预测。</p>`)},
+ {t:T('Run a graph by hand','हातैले ग्राफ चलाउनुहोस्','手动运行一个图'),code:`def double(state):
+    state["n"] = state["n"] * 2
+    return state
+
+def label_big(state):
+    state["label"] = "big"
+    return state
+
+def route(state):
+    if state["n"] > 10:
+        return "label_big"
+    return "END"
+
+nodes = {"double": double, "label_big": label_big}
+
+state = {"n": 7, "label": ""}
+state = nodes["double"](state)
+next_step = route(state)
+print("Next:", next_step)
+if next_step != "END":
+    state = nodes[next_step](state)
+print(state)`,out:`Next: label_big
+{'n': 14, 'label': 'big'}`,
+  x:T(`<ul><li>Two nodes: <code>double</code> and <code>label_big</code>. Each takes the state backpack, changes it, and gives it back.</li><li><code>route</code> is the crossroads: if n is bigger than 10, go to label_big, otherwise finish.</li><li><code>!=</code> means "is not equal to".</li></ul><p>Change 7 to 3 and run again: now the graph ends right after double.</p>`,
+  `<ul><li>दुई नोड: <code>double</code> र <code>label_big</code>। हरेकले स्टेट झोला लिन्छ, बदल्छ, र फिर्ता दिन्छ।</li><li><code>route</code> चौबाटो हो: n 10 भन्दा ठूलो भए label_big मा जाऊ, नत्र सक।</li><li><code>!=</code> को अर्थ "बराबर छैन" हो।</li></ul><p>7 लाई 3 बनाएर फेरि चलाउनुहोस्: अब ग्राफ double पछि नै सकिन्छ।</p>`,
+  `<ul><li>两个节点：<code>double</code> 和 <code>label_big</code>。每个节点接过"状态背包"，修改它，再交回去。</li><li><code>route</code> 就是十字路口：如果 n 大于10，就去 label_big，否则结束。</li><li><code>!=</code> 表示"不等于"。</li></ul><p>把7改成3再运行：这次图在 double 之后就结束了。</p>`)},
+ {t:T('Build a MiniGraph class','MiniGraph क्लास बनाउनुहोस्','做一个 MiniGraph 类'),code:GRAPH_PRE+`
+
+g = MiniGraph()
+g.add_node("double", double)
+g.add_node("label_big", label_big)
+g.add_edge("START", "double")
+g.add_edge("double", route)
+g.add_edge("label_big", "END")
+print(g.invoke({"n": 7, "label": ""}))`,out:`Running: double
+Running: label_big
+{'n': 14, 'label': 'big'}`,
+  x:T(`<p>Your OOP skills pay off! This class is a tiny LangGraph:</p><ul><li><code>add_node</code> saves a step by name. <code>add_edge</code> saves where to go next: either a stop name or a route function.</li><li><code>invoke</code> starts at START and keeps running nodes <b>while</b> it has not reached END.</li><li><code>callable(nxt)</code> is True if nxt is a function. <code>A if condition else B</code> is a one-line if/else.</li></ul>`,
+  `<p>तपाईंको OOP सीप काम लाग्यो! यो क्लास सानो LangGraph हो:</p><ul><li><code>add_node</code> ले नामअनुसार चरण सेभ गर्छ। <code>add_edge</code> ले अर्को कहाँ जाने सेभ गर्छ: बिसौनीको नाम वा route फङ्सन।</li><li><code>invoke</code> START बाट सुरु हुन्छ र END नपुगुन्जेल (<b>while</b>) नोडहरू चलाइरहन्छ।</li><li>nxt फङ्सन हो भने <code>callable(nxt)</code> True हुन्छ। <code>A if सर्त else B</code> एक लाइनको if/else हो।</li></ul>`,
+  `<p>你学的面向对象派上用场了！这个类就是一个迷你LangGraph：</p><ul><li><code>add_node</code> 按名字保存一个步骤。<code>add_edge</code> 保存下一步去哪里：可以是站名，也可以是一个路由函数。</li><li><code>invoke</code> 从 START 开始，只要还没到 END 就（<b>while</b>）一直运行节点。</li><li>如果 nxt 是函数，<code>callable(nxt)</code> 就是 True。<code>A if 条件 else B</code> 是一行写完的 if/else。</li></ul>`)},
+ {t:T('The real LangGraph','साँचो LangGraph','真正的 LangGraph'),local:1,code:`from typing import Literal
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+class State(TypedDict):
+    n: int
+    label: str
+
+def double(state: State) -> dict:
+    return {"n": state["n"] * 2}
+
+def label_big(state: State) -> dict:
+    return {"label": "big"}
+
+def route(state: State) -> Literal["label_big", "__end__"]:
+    return "label_big" if state["n"] > 10 else END
+
+builder = StateGraph(State)
+builder.add_node("double", double)
+builder.add_node("label_big", label_big)
+builder.add_edge(START, "double")
+builder.add_conditional_edges("double", route)
+builder.add_edge("label_big", END)
+
+graph = builder.compile()
+print(graph.invoke({"n": 7, "label": ""}))`,
+  x:T(`<p>Look how close it is to your MiniGraph!</p><ul><li><code>TypedDict</code> describes the backpack: which keys it has and their types.</li><li>Real LangGraph nodes return <b>only the changes</b> (a small dict), and LangGraph merges them into the state for you.</li><li><code>add_conditional_edges</code> = our crossroads. <code>compile()</code> checks the map and makes it ready to run.</li></ul>`,
+  `<p>तपाईंको MiniGraph सँग कति मिल्छ हेर्नुहोस्!</p><ul><li><code>TypedDict</code> ले झोलाको वर्णन गर्छ: कुन key छन् र तिनका किसिम।</li><li>साँचो LangGraph का नोडले <b>बदलिएको भाग मात्र</b> (सानो dict) फर्काउँछन्, र LangGraph ले त्यसलाई स्टेटमा मिलाइदिन्छ।</li><li><code>add_conditional_edges</code> = हाम्रो चौबाटो। <code>compile()</code> ले नक्सा जाँचेर चलाउन तयार बनाउँछ।</li></ul>`,
+  `<p>看看它和你的 MiniGraph 多像！</p><ul><li><code>TypedDict</code> 描述"背包"：有哪些键、各是什么类型。</li><li>真正的 LangGraph 节点只返回<b>改变的部分</b>（一个小字典），LangGraph 会帮你合并到状态里。</li><li><code>add_conditional_edges</code> = 我们的十字路口。<code>compile()</code> 检查这张地图并准备好运行。</li></ul>`)}
+ ]},
+{t:T('Advanced LangGraph: loops, teams and pauses','उन्नत LangGraph: लुप, टोली र रोकाइ','LangGraph进阶：循环、团队和暂停'),pre:GRAPH_PRE,
+ d:T('Graphs can loop back, route work to a team of agents, and pause for a human.','ग्राफले फर्केर लुप गर्न, एजेन्टको टोलीलाई काम बाँड्न, र मान्छेका लागि रोकिन सक्छ।','图可以循环回去、把工作分给一个智能体团队，还可以暂停等人确认。'),
+ s:[
+ {t:T('A loop: try again until good','लुप: राम्रो नभएसम्म फेरि प्रयास','循环：不够好就再试一次'),code:`def write_draft(state):
+    state["tries"] = state["tries"] + 1
+    state["draft"] = "draft version " + str(state["tries"])
+    return state
+
+def check(state):
+    if state["tries"] < 3:
+        return "write_draft"
+    return "END"
+
+g = MiniGraph()
+g.add_node("write_draft", write_draft)
+g.add_edge("START", "write_draft")
+g.add_edge("write_draft", check)
+print(g.invoke({"tries": 0, "draft": ""}))`,out:`Running: write_draft
+Running: write_draft
+Running: write_draft
+{'tries': 3, 'draft': 'draft version 3'}`,
+  x:T(`<p>The edge from <code>write_draft</code> can point <b>back to itself</b>. That is a loop (also called a cycle). Real agents use this to write, check, and improve until the work is good enough. Always give a loop a way to stop!</p><p>MiniGraph from the last lesson is already loaded.</p>`,
+  `<p><code>write_draft</code> बाट निस्कने एजले <b>आफैँतिर फर्केर</b> देखाउन सक्छ। यही लुप हो (साइकल पनि भनिन्छ)। काम राम्रो नभएसम्म लेख्ने, जाँच्ने र सुधार्ने गर्न साँचो एजेन्टले यो प्रयोग गर्छ। लुपलाई सधैँ रोकिने बाटो दिनुहोस्!</p><p>अघिल्लो पाठको MiniGraph पहिले नै लोड छ।</p>`,
+  `<p>从 <code>write_draft</code> 出发的边可以<b>指回它自己</b>，这就是循环（也叫环）。真正的智能体用它来写、检查、改进，直到结果足够好。一定要给循环留一个停止的办法！</p><p>上一课的 MiniGraph 已经加载好了。</p>`)},
+ {t:T('Multi-agent team with a supervisor','सुपरभाइजरसहित बहु-एजेन्ट टोली','由主管带领的多智能体团队'),code:`def supervisor(state):
+    return state
+
+def math_agent(state):
+    state["answer"] = "Math agent: 6 x 7 = 42"
+    return state
+
+def writer_agent(state):
+    state["answer"] = "Writer agent: here is a short poem about rivers"
+    return state
+
+def pick_worker(state):
+    if "times" in state["task"]:
+        return "math_agent"
+    return "writer_agent"
+
+g = MiniGraph()
+g.add_node("supervisor", supervisor)
+g.add_node("math_agent", math_agent)
+g.add_node("writer_agent", writer_agent)
+g.add_edge("START", "supervisor")
+g.add_edge("supervisor", pick_worker)
+g.add_edge("math_agent", "END")
+g.add_edge("writer_agent", "END")
+
+print(g.invoke({"task": "what is 6 times 7", "answer": ""})["answer"])
+print(g.invoke({"task": "write a poem", "answer": ""})["answer"])`,out:`Running: supervisor
+Running: math_agent
+Math agent: 6 x 7 = 42
+Running: supervisor
+Running: writer_agent
+Writer agent: here is a short poem about rivers`,
+  x:T(`<p>A <b>multi-agent system</b> is a team. The <b>supervisor</b> is the manager who reads the task and sends it to the right specialist. Each specialist agent is good at one thing and has its own tools and instructions.</p><p>In real projects each worker would be a full agent (for example made with <code>create_agent</code>) added as a node.</p>`,
+  `<p><b>बहु-एजेन्ट प्रणाली</b> एउटा टोली हो। <b>सुपरभाइजर</b> व्यवस्थापक हो जसले काम पढेर सही विशेषज्ञकहाँ पठाउँछ। हरेक विशेषज्ञ एजेन्ट एउटा काममा सिपालु हुन्छ र उसका आफ्नै औजार र निर्देशन हुन्छन्।</p><p>साँचो प्रोजेक्टमा हरेक कामदार पूरा एजेन्ट हुन्छ (जस्तै <code>create_agent</code> ले बनाइएको) र नोडको रूपमा थपिन्छ।</p>`,
+  `<p><b>多智能体系统</b>就是一个团队。<b>主管（supervisor）</b>像经理，读懂任务后把它交给合适的专家。每个专家智能体只擅长一件事，有自己的工具和指令。</p><p>在真实项目里，每个"员工"都是一个完整的智能体（比如用 <code>create_agent</code> 做的），作为一个节点加进图里。</p>`)},
+ {t:T('Checkpoints and interrupt (pause for a human)','चेकपोइन्ट र interrupt (मान्छेका लागि रोक्ने)','检查点和 interrupt（暂停等人确认）'),local:1,code:`from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import interrupt, Command
+
+class State(TypedDict):
+    booking: str
+    approved: bool
+
+def ask_approval(state: State) -> dict:
+    answer = interrupt(f"Approve this booking? {state['booking']}")
+    return {"approved": answer == "yes"}
+
+builder = StateGraph(State)
+builder.add_node("ask_approval", ask_approval)
+builder.add_edge(START, "ask_approval")
+builder.add_edge("ask_approval", END)
+graph = builder.compile(checkpointer=InMemorySaver())
+
+config = {"configurable": {"thread_id": "1"}}
+graph.invoke({"booking": "Dr. Rai, Monday 10:00", "approved": False}, config)
+result = graph.invoke(Command(resume="yes"), config)
+print(result)`,
+  x:T(`<ul><li>A <b>checkpointer</b> saves the state after every step, like saving a video game. If something stops, you continue from the save.</li><li><code>interrupt(...)</code> pauses the graph and shows a question. The program can wait minutes or days.</li><li><code>Command(resume="yes")</code> continues from the pause with the human's answer. The same thread_id finds the right saved game.</li></ul>`,
+  `<ul><li><b>checkpointer</b> ले हरेक चरणपछि स्टेट सेभ गर्छ, भिडियो गेम सेभ गरे जस्तै। केही रोकियो भने सेभबाट अगाडि बढ्न सकिन्छ।</li><li><code>interrupt(...)</code> ले ग्राफ रोकेर प्रश्न देखाउँछ। प्रोग्रामले मिनेटौँ वा दिनौँ पर्खन सक्छ।</li><li><code>Command(resume="yes")</code> ले मान्छेको उत्तरसहित रोकिएको ठाउँबाट अगाडि बढाउँछ। उही thread_id ले सही सेभ फेला पार्छ।</li></ul>`,
+  `<ul><li><b>检查点保存器</b>在每一步之后保存状态，就像玩游戏时存档。如果中途停了，可以从存档继续。</li><li><code>interrupt(...)</code> 让图暂停并显示一个问题。程序可以等几分钟，甚至几天。</li><li><code>Command(resume="yes")</code> 带着人的回答从暂停的地方继续。同一个 thread_id 能找到正确的存档。</li></ul>`)}
+ ]},
+{t:T('Deep agents','डिप एजेन्ट','深度智能体（Deep Agents）'),
+ d:T('For long, complicated jobs: the agent makes a plan, keeps notes in files, and hires helper agents.','लामो, जटिल कामका लागि: एजेन्टले योजना बनाउँछ, फाइलमा नोट राख्छ, र सहयोगी एजेन्ट लगाउँछ।','用于又长又复杂的任务：智能体会做计划、在文件里记笔记，还会派出助手智能体。'),
+ s:[
+ {t:T('What makes an agent "deep"?','एजेन्टलाई "डिप" के ले बनाउँछ?','什么样的智能体算"深度"的？'),
+  x:T(`<p>A simple agent is good for short tasks. A <b>deep agent</b> handles big jobs, like "research three clinics, compare them and write a report". It adds:</p><ul><li><b>Planning</b>: a to-do list it writes and updates (pending → in progress → completed).</li><li><b>A file system</b>: a place to save notes and drafts, so the context window does not overflow.</li><li><b>Subagents</b>: helper agents that do one part with a fresh, clean memory and return a short report.</li></ul><p>LangChain's <code>deepagents</code> package gives you these parts ready-made.</p>`,
+  `<p>साधारण एजेन्ट छोटो कामका लागि राम्रो हुन्छ। <b>डिप एजेन्ट</b>ले ठूला काम सम्हाल्छ, जस्तै "तीन क्लिनिकबारे खोज, तुलना गर र रिपोर्ट लेख"। यसले थप्छ:</p><ul><li><b>योजना</b>: आफैँ लेख्ने र अद्यावधिक गर्ने कामको सूची (बाँकी → चलिरहेको → सकिएको)।</li><li><b>फाइल प्रणाली</b>: नोट र ड्राफ्ट सेभ गर्ने ठाउँ, ताकि कन्टेक्स्ट विन्डो नभरियोस्।</li><li><b>सब-एजेन्ट</b>: नयाँ, सफा मेमोरीसहित एउटा भाग गरेर छोटो रिपोर्ट फर्काउने सहयोगी एजेन्ट।</li></ul><p>LangChain को <code>deepagents</code> प्याकेजले यी भाग तयारी अवस्थामा दिन्छ।</p>`,
+  `<p>简单的智能体适合短任务。<b>深度智能体</b>能处理大任务，比如"调查三家诊所，比较它们并写一份报告"。它增加了：</p><ul><li><b>计划</b>：它自己写、自己更新的待办清单（待处理 → 进行中 → 已完成）。</li><li><b>文件系统</b>：存放笔记和草稿的地方，这样上下文窗口不会被塞满。</li><li><b>子智能体</b>：带着全新、干净记忆去完成一部分工作，再交回一份简短报告的助手。</li></ul><p>LangChain 的 <code>deepagents</code> 包把这些部件都准备好了。</p>`)},
+ {t:T('A to-do planner','कामको सूची बनाउने (planner)','待办清单规划器'),code:`todos = []
+
+def write_todos(*tasks):
+    for t in tasks:
+        todos.append({"task": t, "status": "pending"})
+
+def show():
+    for i, t in enumerate(todos, start=1):
+        print(i, t["status"].ljust(11), t["task"])
+
+write_todos("Search clinics", "Compare times", "Book appointment")
+todos[0]["status"] = "completed"
+todos[1]["status"] = "in_progress"
+show()`,out:`1 completed   Search clinics
+2 in_progress Compare times
+3 pending     Book appointment`,
+  x:T(`<ul><li><code>enumerate(todos, start=1)</code> gives a number with each item: 1, 2, 3.</li><li><code>.ljust(11)</code> adds spaces so the text is 11 letters wide, which lines up the columns neatly.</li><li><code>todos[0]["status"]</code>: first item, then its "status" key. Lists and dictionaries can be combined like this.</li></ul>`,
+  `<ul><li><code>enumerate(todos, start=1)</code> ले हरेक वस्तुसँग नम्बर दिन्छ: 1, 2, 3।</li><li><code>.ljust(11)</code> ले अक्षर ११ अक्षर चौडा बनाउन space थप्छ, जसले स्तम्भहरू मिलाउँछ।</li><li><code>todos[0]["status"]</code>: पहिलो वस्तु, अनि त्यसको "status" key। सूची र डिक्सनरी यसरी मिसाउन सकिन्छ।</li></ul>`,
+  `<ul><li><code>enumerate(todos, start=1)</code> 给每一项配上编号：1、2、3。</li><li><code>.ljust(11)</code> 用空格把文字补到11个字符宽，让各列对齐。</li><li><code>todos[0]["status"]</code>：先取第一项，再取它的"status"键。列表和字典可以这样组合使用。</li></ul>`)},
+ {t:T('Files and a helper subagent','फाइल र सहयोगी सब-एजेन्ट','文件和助手子智能体'),code:`files = {}
+
+def write_file(path, text):
+    files[path] = text
+
+def read_file(path):
+    return files.get(path, "(no such file)")
+
+def research_subagent(topic):
+    notes = f"Notes about {topic}: 3 clinics are open on Monday."
+    write_file("notes.txt", notes)
+    return "Saved notes to notes.txt"
+
+print(research_subagent("clinics"))
+print(read_file("notes.txt"))
+print(read_file("plan.txt"))`,out:`Saved notes to notes.txt
+Notes about clinics: 3 clinics are open on Monday.
+(no such file)`,
+  x:T(`<p>Here a dictionary pretends to be a file system (file name → text). The subagent does the research, saves the long notes in a file, and returns only a <b>short</b> message. The main agent reads the file only when it needs it. That keeps its memory small and tidy.</p><p><code>.get(key, default)</code> returns the default instead of an error when the key is missing.</p>`,
+  `<p>यहाँ डिक्सनरीले फाइल प्रणालीको भूमिका खेलेको छ (फाइलको नाम → अक्षर)। सब-एजेन्टले खोज गर्छ, लामो नोट फाइलमा सेभ गर्छ, र <b>छोटो</b> सन्देश मात्र फर्काउँछ। मुख्य एजेन्टले चाहिँदा मात्र फाइल पढ्छ। यसले उसको मेमोरी सानो र सफा राख्छ।</p><p>key नभए <code>.get(key, default)</code> ले त्रुटिको सट्टा default फर्काउँछ।</p>`,
+  `<p>这里用一个字典来假装文件系统（文件名 → 文字）。子智能体负责调查，把长长的笔记存进文件，只返回一条<b>简短</b>的消息。主智能体只在需要时才读文件，这样它的记忆就能保持小巧整洁。</p><p>当键不存在时，<code>.get(key, default)</code> 会返回默认值，而不是报错。</p>`)},
+ {t:T('A real deep agent','साँचो डिप एजेन्ट','真正的深度智能体'),local:1,code:`pip install deepagents`,
+  x:T(`<p>Run this in your activated virtual environment, then save the next step's code as <code>deep.py</code>.</p>`,
+  `<p>सक्रिय भर्चुअल वातावरणमा यो चलाउनुहोस्, अनि अर्को चरणको कोड <code>deep.py</code> नाममा सेभ गर्नुहोस्।</p>`,
+  `<p>在激活的虚拟环境里运行这条命令，然后把下一步的代码保存为 <code>deep.py</code>。</p>`)},
+ {t:T('Deep agent code','डिप एजेन्टको कोड','深度智能体代码'),local:1,code:`from deepagents import create_deep_agent
+from langchain.agents.middleware import TodoListMiddleware
+
+def find_clinics(area: str) -> str:
+    """Find clinics in an area."""
+    return f"Clinics in {area}: City Clinic, Lake Clinic, Hill Clinic."
+
+agent = create_deep_agent(
+    model="anthropic:claude-sonnet-5-5",
+    tools=[find_clinics],
+    system_prompt="You are a careful research assistant. Plan first, then work step by step.",
+    middleware=[TodoListMiddleware()],
+)
+
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "Find clinics in Pokhara and write a short comparison."}]}
+)
+print(result["messages"][-1].content)`,
+  x:T(`<ul><li><code>create_deep_agent</code> looks like <code>create_agent</code>, but already includes the file tools (<code>read_file</code>, <code>write_file</code>, …) and a <code>task</code> tool for subagents.</li><li><code>TodoListMiddleware</code> adds the planning to-do list (in newer versions planning is opt-in, so we add it).</li></ul>`,
+  `<ul><li><code>create_deep_agent</code> हेर्दा <code>create_agent</code> जस्तै छ, तर यसमा फाइल औजार (<code>read_file</code>, <code>write_file</code>, …) र सब-एजेन्टका लागि <code>task</code> औजार पहिले नै हुन्छन्।</li><li><code>TodoListMiddleware</code> ले योजनाको कामको सूची थप्छ (नयाँ संस्करणमा योजना आफैँ थप्नुपर्छ, त्यसैले हामीले थपेका छौँ)।</li></ul>`,
+  `<ul><li><code>create_deep_agent</code> 看起来像 <code>create_agent</code>，但已经自带文件工具（<code>read_file</code>、<code>write_file</code> 等）和用于子智能体的 <code>task</code> 工具。</li><li><code>TodoListMiddleware</code> 加上做计划用的待办清单（新版本里计划功能需要手动开启，所以我们加上它）。</li></ul>`)}
+ ]},
+{t:T('Safety, governance and ethics','सुरक्षा, सुशासन र नैतिकता','安全、治理与伦理'),pre:TOOLS_PRE,
+ d:T('Agents act in the real world, so they need rules, records, tests and human control.','एजेन्टले साँचो संसारमा काम गर्छ, त्यसैले नियम, रेकर्ड, परीक्षण र मानिसको नियन्त्रण चाहिन्छ।','智能体会在现实世界中行动，所以需要规则、记录、测试和人的控制。'),
+ s:[
+ {t:T('What can go wrong, and the rules that help','के बिग्रन सक्छ, र मद्दत गर्ने नियम','可能出什么问题，以及有帮助的规则'),
+  x:T(`<p><b>Risks:</b> wrong answers (hallucination), wrong actions (booking the wrong day), privacy leaks, unfair treatment of some people (bias), people tricking the agent with hidden instructions (prompt injection), and high costs.</p><p><b>Good rules (governance):</b></p><ul><li><b>Least power</b>: give the agent only the tools it really needs.</li><li><b>Human in the loop</b> for anything important or hard to undo.</li><li><b>Guardrails</b>: automatic checks that block risky actions.</li><li><b>Audit log</b>: a record of every action, to check later.</li><li><b>Evaluation</b>: test the agent with known questions before and after changes.</li><li><b>Privacy</b>: collect only needed data, hide it in logs, follow local law.</li><li><b>Honesty</b>: tell people they are talking to an AI.</li></ul>`,
+  `<p><b>जोखिम:</b> गलत उत्तर (ह्यालुसिनेसन), गलत काम (गलत दिन बुक गर्नु), निजी जानकारी चुहिनु, केही मान्छेमाथि अन्यायपूर्ण व्यवहार (पूर्वाग्रह/bias), लुकेका निर्देशनले एजेन्टलाई झुक्याउनु (प्रम्प्ट इन्जेक्सन), र धेरै खर्च।</p><p><b>राम्रा नियम (सुशासन):</b></p><ul><li><b>न्यूनतम शक्ति</b>: एजेन्टलाई साँच्चै चाहिने औजार मात्र दिने।</li><li>महत्त्वपूर्ण वा फर्काउन गाह्रो कामका लागि <b>Human in the loop</b>।</li><li><b>गार्डरेल</b>: जोखिमपूर्ण काम रोक्ने स्वचालित जाँच।</li><li><b>अडिट लग</b>: पछि जाँच्न हरेक कामको रेकर्ड।</li><li><b>मूल्याङ्कन</b>: परिवर्तनअघि र पछि थाहा भएका प्रश्नले एजेन्टको परीक्षण।</li><li><b>गोपनीयता</b>: चाहिने डाटा मात्र लिने, लगमा लुकाउने, स्थानीय कानुन मान्ने।</li><li><b>इमानदारी</b>: मान्छेलाई AI सँग कुरा गर्दैछु भनेर थाहा दिने।</li></ul>`,
+  `<p><b>风险：</b>答错（幻觉）、做错事（订错日子）、隐私泄露、对某些人不公平（偏见）、有人用隐藏的指令骗智能体（提示词注入），以及费用过高。</p><p><b>好的规则（治理）：</b></p><ul><li><b>最小权限</b>：只给智能体它真正需要的工具。</li><li>重要或难以撤销的操作要<b>人在回路中</b>。</li><li><b>护栏（guardrail）</b>：自动拦截有风险操作的检查。</li><li><b>审计日志</b>：记录每一个操作，方便事后检查。</li><li><b>评估</b>：在修改前后，用已知答案的问题测试智能体。</li><li><b>隐私</b>：只收集必要的数据，在日志里隐藏，遵守当地法律。</li><li><b>诚实</b>：告诉人们他们在和AI对话。</li></ul>`)},
+ {t:T('A guardrail with an audit log','अडिट लगसहितको गार्डरेल','带审计日志的护栏'),code:`audit_log = []
+RISKY = ["delete", "pay", "send"]
+
+def guarded(action):
+    risky = any(word in action for word in RISKY)
+    status = "needs human approval" if risky else "allowed"
+    audit_log.append({"action": action, "status": status})
+    return status
+
+print(guarded("read calendar"))
+print(guarded("send email to patient"))
+print(guarded("delete all records"))
+print("Log entries:", len(audit_log))`,out:`allowed
+needs human approval
+needs human approval
+Log entries: 3`,
+  x:T(`<ul><li><code>any(...)</code> is True if <b>at least one</b> risky word appears in the action.</li><li>Every decision, allowed or not, is written to <code>audit_log</code>. Names in CAPITALS like <code>RISKY</code> are a habit meaning "a fixed setting, do not change while running".</li></ul>`,
+  `<ul><li>काममा <b>कम्तीमा एउटा</b> जोखिमपूर्ण शब्द भए <code>any(...)</code> True हुन्छ।</li><li>हरेक निर्णय, अनुमति होस् वा नहोस्, <code>audit_log</code> मा लेखिन्छ। <code>RISKY</code> जस्ता ठूला अक्षरका नामको अर्थ "स्थिर सेटिङ, चलिरहँदा नबदल्ने" भन्ने बानी हो।</li></ul>`,
+  `<ul><li>只要操作里出现<b>至少一个</b>危险词，<code>any(...)</code> 就是 True。</li><li>每个决定，不管允许与否，都会写进 <code>audit_log</code>。像 <code>RISKY</code> 这样全大写的名字是一种习惯，表示"固定的设置，运行时不要改"。</li></ul>`)},
+ {t:T('Evaluation: test your agent','मूल्याङ्कन: आफ्नो एजेन्ट परीक्षण गर्नुहोस्','评估：测试你的智能体'),code:`tests = [
+    ("What is 2 plus 2?", "calculator"),
+    ("What time is it?", "clock"),
+    ("Tell me a story", "none"),
+]
+passed = 0
+for question, expected in tests:
+    got = brain(question)
+    if got == expected:
+        passed = passed + 1
+        print("PASS |", question, "->", got)
+    else:
+        print("FAIL |", question, "->", got)
+print(passed, "of", len(tests), "tests passed")`,out:`PASS | What is 2 plus 2? -> calculator
+PASS | What time is it? -> clock
+PASS | Tell me a story -> none
+3 of 3 tests passed`,
+  x:T(`<p>Each test is a pair <code>(question, expected answer)</code>. The loop unpacks each pair into two boxes. Run your tests every time you change the agent, so you notice if something breaks. Add a test that fails on purpose to see what happens.</p>`,
+  `<p>हरेक परीक्षण <code>(प्रश्न, अपेक्षित उत्तर)</code> जोडी हो। लुपले हरेक जोडीलाई दुई बाकसमा खोल्छ। एजेन्ट बदल्दा हरेक पटक परीक्षण चलाउनुहोस्, ताकि केही बिग्रियो भने थाहा होस्। के हुन्छ हेर्न जानीजानी फेल हुने परीक्षण थप्नुहोस्।</p>`,
+  `<p>每个测试是一对 <code>(问题, 期望答案)</code>。循环把每一对拆进两个盒子里。每次修改智能体都要跑一遍测试，这样有东西坏了马上就能发现。试着故意加一个会失败的测试，看看会怎样。</p>`)},
+ {t:T('Privacy: hide phone numbers','गोपनीयता: फोन नम्बर लुकाउनुहोस्','隐私：隐藏电话号码'),code:`def mask(text):
+    words = []
+    for w in text.split():
+        if w.isdigit() and len(w) >= 7:
+            words.append("*" * (len(w) - 3) + w[-3:])
+        else:
+            words.append(w)
+    return " ".join(words)
+
+print(mask("Call Asha at 9841234567 please"))`,out:`Call Asha at *******567 please`,
+  x:T(`<ul><li><code>"*" * 7</code> repeats the star 7 times.</li><li><code>w[-3:]</code> takes the last 3 characters.</li><li><code>" ".join(words)</code> glues the words back together with spaces.</li></ul><p>Run something like this before saving messages to a log, so private numbers are not stored.</p>`,
+  `<ul><li><code>"*" * 7</code> ले तारा ७ पटक दोहोर्‍याउँछ।</li><li><code>w[-3:]</code> ले अन्तिम ३ अक्षर लिन्छ।</li><li><code>" ".join(words)</code> ले शब्दहरूलाई space राखेर फेरि जोड्छ।</li></ul><p>सन्देश लगमा सेभ गर्नुअघि यस्तो चलाउनुहोस्, ताकि निजी नम्बर नराखियोस्।</p>`,
+  `<ul><li><code>"*" * 7</code> 把星号重复7次。</li><li><code>w[-3:]</code> 取最后3个字符。</li><li><code>" ".join(words)</code> 用空格把这些词重新拼起来。</li></ul><p>在把消息存进日志之前先这样处理一下，就不会保存隐私号码。</p>`)}
+ ]},
+{t:T('Final project: medical appointment assistant','अन्तिम प्रोजेक्ट: चिकित्सा अपोइन्टमेन्ट सहायक','期末项目：医疗预约助手'),
+ d:T('Put it all together: a clinic booking agent with tools, routing, safety rules and human approval. (A practice project, not real medical advice.)','सबै जोड्नुहोस्: औजार, रुटिङ, सुरक्षा नियम र मानिसको स्वीकृतिसहितको क्लिनिक बुकिङ एजेन्ट। (अभ्यास प्रोजेक्ट हो, साँचो चिकित्सा सल्लाह होइन।)','把所学全部组合起来：一个带工具、路由、安全规则和人工审批的诊所预约智能体。（这是练习项目，不是真正的医疗建议。）'),
+ s:[
+ {t:T('Plan the system','प्रणालीको योजना बनाउनुहोस्','规划系统'),
+  x:T(`<p>Before coding, draw the graph on paper:</p><ul><li><b>START → classify</b>: what does the patient want? book, cancel, list free times, an emergency, or something else.</li><li><b>emergency</b> → immediately tell them to call emergency services. The agent never gives medical advice.</li><li><b>list</b> → show free times. <b>book</b> → human approval → book. <b>cancel</b> → cancel and free the time.</li><li>Every request goes into a <b>log</b>.</li></ul><p>Real clinic software must also follow health-privacy laws and be checked by professionals.</p>`,
+  `<p>कोड लेख्नुअघि कागजमा ग्राफ कोर्नुहोस्:</p><ul><li><b>START → classify</b>: बिरामी के चाहन्छन्? बुक, रद्द, खाली समय हेर्ने, आपतकालीन अवस्था, वा अरू केही।</li><li><b>emergency</b> → तुरुन्तै आपतकालीन सेवामा फोन गर्न भन्ने। एजेन्टले कहिल्यै चिकित्सा सल्लाह दिँदैन।</li><li><b>list</b> → खाली समय देखाउने। <b>book</b> → मानिसको स्वीकृति → बुक। <b>cancel</b> → रद्द गरेर समय खाली गर्ने।</li><li>हरेक अनुरोध <b>लग</b>मा जान्छ।</li></ul><p>साँचो क्लिनिक सफ्टवेयरले स्वास्थ्य-गोपनीयता कानुन पनि मान्नुपर्छ र विशेषज्ञले जाँच्नुपर्छ।</p>`,
+  `<p>写代码之前，先在纸上画出这张图：</p><ul><li><b>START → classify</b>：病人想做什么？预约、取消、查看空闲时间、紧急情况，还是别的。</li><li><b>emergency</b> → 立即告诉对方拨打急救电话。智能体绝不提供医疗建议。</li><li><b>list</b> → 显示空闲时间。<b>book</b> → 人工审批 → 预约。<b>cancel</b> → 取消并释放时间。</li><li>每个请求都记入<b>日志</b>。</li></ul><p>真正的诊所软件还必须遵守医疗隐私法律，并经过专业人员检查。</p>`)},
+ {t:T('Data and booking tool','डाटा र बुकिङ औजार','数据和预约工具'),code:`slots = {"Dr. Rai": ["Mon 10:00", "Mon 11:00"], "Dr. Chen": ["Tue 09:00"]}
+bookings = []
+
+def list_slots():
+    for doctor, times in slots.items():
+        print(doctor, ":", ", ".join(times))
+
+def book(name, doctor, time):
+    if time in slots.get(doctor, []):
+        slots[doctor].remove(time)
+        bookings.append({"name": name, "doctor": doctor, "time": time})
+        return f"Booked {name} with {doctor} at {time}"
+    return "Sorry, that time is not free"
+
+list_slots()
+print(book("Asha", "Dr. Rai", "Mon 10:00"))
+print(book("Bikash", "Dr. Rai", "Mon 10:00"))
+list_slots()`,out:`Dr. Rai : Mon 10:00, Mon 11:00
+Dr. Chen : Tue 09:00
+Booked Asha with Dr. Rai at Mon 10:00
+Sorry, that time is not free
+Dr. Rai : Mon 11:00
+Dr. Chen : Tue 09:00`,
+  x:T(`<ul><li><code>slots</code>: a dictionary of doctor → list of free times.</li><li><code>.remove(time)</code> takes that time out of the list, so nobody can book it twice. Bikash's booking fails because Asha already took it.</li><li><code>", ".join(times)</code> joins the list into one line of text.</li></ul>`,
+  `<ul><li><code>slots</code>: डाक्टर → खाली समयको सूची भएको डिक्सनरी।</li><li><code>.remove(time)</code> ले त्यो समय सूचीबाट हटाउँछ, ताकि कसैले दुई पटक बुक गर्न नसकोस्। आशाले पहिले नै लिएकाले बिकाशको बुकिङ असफल हुन्छ।</li><li><code>", ".join(times)</code> ले सूचीलाई एक लाइनको अक्षरमा जोड्छ।</li></ul>`,
+  `<ul><li><code>slots</code>：医生 → 空闲时间列表 的字典。</li><li><code>.remove(time)</code> 把这个时间从列表里拿掉，这样就没人能重复预约。Bikash 预约失败，因为 Asha 已经约了。</li><li><code>", ".join(times)</code> 把列表拼成一行文字。</li></ul>`)},
+ {t:T('Classify the request (with an emergency rule)','अनुरोध वर्गीकरण (आपतकालीन नियमसहित)','给请求分类（含紧急情况规则）'),code:`def classify(text):
+    t = text.lower()
+    if "chest pain" in t or "can't breathe" in t or "emergency" in t:
+        return "emergency"
+    if "cancel" in t:
+        return "cancel"
+    if "book" in t or "appointment" in t:
+        return "book"
+    if "free" in t or "available" in t:
+        return "list"
+    return "unknown"
+
+for msg in ["I want to book an appointment", "Which times are available?", "Cancel my booking", "I have chest pain", "hello"]:
+    print(msg, "->", classify(msg))`,out:`I want to book an appointment -> book
+Which times are available? -> list
+Cancel my booking -> cancel
+I have chest pain -> emergency
+hello -> unknown`,
+  x:T(`<p>The <b>order matters</b>: the emergency check comes first, so safety always wins. "Cancel my booking" contains "book", but cancel is checked before book, so it is classified correctly. In the real version, Claude does this classification and understands far more ways of saying things.</p>`,
+  `<p><b>क्रम महत्त्वपूर्ण छ</b>: आपतकालीन जाँच पहिले आउँछ, त्यसैले सुरक्षा सधैँ जित्छ। "Cancel my booking" मा "book" छ, तर cancel लाई book भन्दा पहिले जाँचिन्छ, त्यसैले सही वर्गीकरण हुन्छ। साँचो संस्करणमा Claude ले यो वर्गीकरण गर्छ र भन्ने धेरै तरिका बुझ्छ।</p>`,
+  `<p><b>顺序很重要</b>：紧急情况检查放在最前面，所以安全永远优先。"Cancel my booking" 里有"book"，但 cancel 比 book 先检查，所以分类正确。在真正的版本里，由Claude来做分类，它能听懂各种不同的说法。</p>`)},
+ {t:T('The full ClinicAssistant','पूरा ClinicAssistant','完整的 ClinicAssistant'),code:`def cancel(name):
+    for b in bookings:
+        if b["name"] == name:
+            bookings.remove(b)
+            slots[b["doctor"]].append(b["time"])
+            return f"Cancelled booking for {name}"
+    return f"No booking found for {name}"
+
+class ClinicAssistant:
+    def __init__(self):
+        self.log = []
+
+    def handle(self, name, text, doctor="Dr. Chen", time="Tue 09:00", approve=True):
+        intent = classify(text)
+        self.log.append((name, intent))
+        if intent == "emergency":
+            return "This may be an emergency. Please call your local emergency number now."
+        if intent == "list":
+            list_slots()
+            return "Those are the free times."
+        if intent == "book":
+            if not approve:
+                return "Booking not confirmed by staff."
+            return book(name, doctor, time)
+        if intent == "cancel":
+            return cancel(name)
+        return "I can book, cancel or list appointments."
+
+bot = ClinicAssistant()
+print(bot.handle("Mina", "Which times are available?"))
+print(bot.handle("Mina", "Please book an appointment"))
+print(bot.handle("Asha", "Cancel my booking"))
+print(bot.handle("Ram", "I have chest pain"))
+print("Log:", bot.log)`,out:`Dr. Rai : Mon 11:00
+Dr. Chen : Tue 09:00
+Those are the free times.
+Booked Mina with Dr. Chen at Tue 09:00
+Cancelled booking for Asha
+This may be an emergency. Please call your local emergency number now.
+Log: [('Mina', 'list'), ('Mina', 'book'), ('Asha', 'cancel'), ('Ram', 'emergency')]`,
+  x:T(`<ul><li><code>doctor="Dr. Chen"</code> in the def line is a <b>default value</b>: used when the caller does not give one.</li><li><code>approve=True</code> stands in for the human approval step. Try <code>approve=False</code>.</li><li><code>(name, intent)</code> is a tuple saved in the log.</li></ul><p>This is your complete practice project: classification (brain), tools, safety rule, human approval and an audit log, inside a class.</p>`,
+  `<ul><li>def लाइनको <code>doctor="Dr. Chen"</code> <b>डिफल्ट मान</b> हो: बोलाउनेले नदिएमा यही प्रयोग हुन्छ।</li><li><code>approve=True</code> ले मानिसको स्वीकृतिको चरणको काम गर्छ। <code>approve=False</code> गरेर हेर्नुहोस्।</li><li><code>(name, intent)</code> लगमा सेभ हुने टुपल हो।</li></ul><p>यो तपाईंको पूरा अभ्यास प्रोजेक्ट हो: वर्गीकरण (दिमाग), औजार, सुरक्षा नियम, मानिसको स्वीकृति र अडिट लग, सबै एउटा क्लासभित्र।</p>`,
+  `<ul><li>def 行里的 <code>doctor="Dr. Chen"</code> 是<b>默认值</b>：调用的人没给的时候就用它。</li><li><code>approve=True</code> 代替人工审批这一步。试试改成 <code>approve=False</code>。</li><li><code>(name, intent)</code> 是存进日志的元组。</li></ul><p>这就是你完整的练习项目：分类（大脑）、工具、安全规则、人工审批和审计日志，全部放在一个类里。</p>`)},
+ {t:T('The real version with Claude','Claude सहितको साँचो संस्करण','用Claude做的真正版本'),local:1,code:`from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langchain.tools import tool
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
+
+slots = {"Dr. Rai": ["Mon 10:00", "Mon 11:00"], "Dr. Chen": ["Tue 09:00"]}
+
+@tool
+def list_slots() -> str:
+    """List the free appointment times for every doctor."""
+    return "\\n".join(f"{d}: {', '.join(t)}" for d, t in slots.items())
+
+@tool
+def book_appointment(name: str, doctor: str, time: str) -> str:
+    """Book a free time with a doctor for a patient."""
+    if time in slots.get(doctor, []):
+        slots[doctor].remove(time)
+        return f"Booked {name} with {doctor} at {time}"
+    return "That time is not free"
+
+agent = create_agent(
+    model="anthropic:claude-sonnet-5-5",
+    tools=[list_slots, book_appointment],
+    system_prompt=(
+        "You help patients book clinic appointments. "
+        "You never give medical advice. "
+        "If someone describes an emergency, tell them to call emergency services now."
+    ),
+    middleware=[HumanInTheLoopMiddleware(interrupt_on={"book_appointment": True})],
+    checkpointer=InMemorySaver(),
+)
+
+config = {"configurable": {"thread_id": "patient-asha"}}
+agent.invoke(
+    {"messages": [{"role": "user", "content": "Please book Asha with Dr. Rai on Mon 10:00"}]},
+    config,
+)
+# The agent paused before booking. A staff member approves:
+result = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}), config)
+print(result["messages"][-1].content)`,
+  x:T(`<p>Everything from the advanced track in one file: LangChain tools with clear docstrings, a system prompt with safety rules, human-in-the-loop middleware, and a checkpointer with a thread per patient. Ideas to extend it:</p><ul><li>Add a <code>cancel_appointment</code> tool.</li><li>Rebuild it as a LangGraph with a classify node and an emergency branch.</li><li>Add a test list (Lesson 20) and an audit log middleware (Lesson 15).</li></ul>`,
+  `<p>उन्नत खण्डका सबै कुरा एउटै फाइलमा: स्पष्ट docstring भएका LangChain औजार, सुरक्षा नियमसहितको सिस्टम प्रम्प्ट, human-in-the-loop मिडलवेयर, र हरेक बिरामीको थ्रेडसहितको checkpointer। विस्तार गर्ने विचार:</p><ul><li><code>cancel_appointment</code> औजार थप्नुहोस्।</li><li>classify नोड र आपतकालीन हाँगासहित LangGraph मा फेरि बनाउनुहोस्।</li><li>परीक्षण सूची (पाठ २०) र अडिट लग मिडलवेयर (पाठ १५) थप्नुहोस्।</li></ul>`,
+  `<p>进阶部分的所有内容都在这一个文件里：带清晰文档字符串的LangChain工具、含安全规则的系统提示词、人在回路中间件，以及每位病人一个线程的检查点保存器。可以继续扩展：</p><ul><li>添加一个 <code>cancel_appointment</code> 工具。</li><li>用LangGraph重做，加上 classify 节点和紧急情况分支。</li><li>加上测试列表（第20课）和审计日志中间件（第15课）。</li></ul>`)}
+ ]}
+];
+MODS.push(...MODS2);
+
+/* ---------- glossary ---------- */
+const G=(en,ne,zh,den,dne,dzh)=>({w:T(en,ne,zh),d:T(den,dne,dzh)});
+const GLOSS=[
+G('AI (Artificial Intelligence)','AI (कृत्रिम बुद्धिमत्ता)','AI（人工智能）','Computer programs that can do things that normally need human thinking, like understanding language or recognising pictures.','मान्छेले सोचेर गर्ने काम, जस्तै भाषा बुझ्ने वा तस्बिर चिन्ने, गर्न सक्ने कम्प्युटर प्रोग्राम।','能做通常需要人类思考才能完成的事情的计算机程序，比如理解语言或识别图片。'),
+G('AI agent','AI एजेन्ट','AI智能体','An AI that can take actions, not just talk. It uses tools, remembers, and loops until a task is done.','कुरा मात्र होइन, काम पनि गर्ने AI। यसले औजार चलाउँछ, याद राख्छ, र काम नसकिउन्जेल लुप चलाउँछ।','不只会说话、还能采取行动的AI。它会用工具、会记忆，并不断循环直到任务完成。'),
+G('LLM (Large Language Model)','LLM (ठूलो भाषा मोडेल)','LLM（大语言模型）','An AI trained on huge amounts of text so it can read and write language. Claude is an LLM. It is the "brain" of an agent.','धेरै ठूलो मात्रामा लेख पढाएर सिकाइएको AI, जसले भाषा पढ्न र लेख्न सक्छ। Claude एउटा LLM हो। यो एजेन्टको "दिमाग" हो।','用海量文字训练出来、能读能写的AI。Claude就是一个大语言模型，它是智能体的"大脑"。'),
+G('Model','मोडेल','模型','The trained AI itself, the thing that thinks. Different models are like different brains: some faster, some smarter.','तालिम पाएको AI आफैँ, सोच्ने चीज। फरक मोडेल फरक दिमाग जस्तै हुन्: कुनै छिटो, कुनै बढी बुद्धिमान।','训练好的AI本身，负责思考的东西。不同的模型就像不同的大脑：有的更快，有的更聪明。'),
+G('Prompt','प्रम्प्ट','提示词（Prompt）','The text you give an AI: your question or instructions.','AI लाई दिने अक्षर: तपाईंको प्रश्न वा निर्देशन।','你给AI的文字：你的问题或指令。'),
+G('System prompt','सिस्टम प्रम्प्ट','系统提示词','Special instructions given before the conversation that set the AI\'s role and rules, like "You are a patient tutor".','कुराकानी अघि दिइने विशेष निर्देशन, जसले AI को भूमिका र नियम तोक्छ, जस्तै "तिमी धैर्यवान शिक्षक हौ"।','在对话开始前给AI的特别指令，用来设定它的角色和规则，比如"你是一位耐心的老师"。'),
+G('Token','टोकन','Token（词元）','A small piece of text, often part of a word. AI reads and writes in tokens, and usage is counted in tokens.','अक्षरको सानो टुक्रा, प्रायः शब्दको भाग। AI ले टोकनमा पढ्छ र लेख्छ, र खर्च पनि टोकनमा गनिन्छ।','一小块文字，通常是一个词的一部分。AI按token来读写，使用量也按token计算。'),
+G('API','API','API（应用程序接口）','A doorway that lets one program talk to another. Your Python code uses Claude\'s API to send messages and get answers.','एउटा प्रोग्रामलाई अर्को प्रोग्रामसँग कुरा गर्न दिने ढोका। तपाईंको Python कोडले सन्देश पठाउन र उत्तर पाउन Claude को API प्रयोग गर्छ।','让一个程序和另一个程序对话的"门"。你的Python代码通过Claude的API发送消息、获取回答。'),
+G('API key','API key (API कुञ्जी)','API密钥','A secret password for using an API. Keep it private: anyone with it can use your account.','API प्रयोग गर्ने गोप्य पासवर्ड। गोप्य राख्नुहोस्: यो भएको जोसुकैले तपाईंको खाता चलाउन सक्छ।','使用API的秘密密码。一定要保密：拿到它的人就能使用你的账户。'),
+G('Python','Python','Python','A programming language that reads almost like English. It is the most popular language for AI and great for beginners.','लगभग अंग्रेजी जस्तै पढिने प्रोग्रामिङ भाषा। AI का लागि सबैभन्दा लोकप्रिय र सुरुआतीका लागि उत्तम।','一种读起来几乎像英语的编程语言。它是AI领域最流行的语言，也非常适合初学者。'),
+G('Code / program','कोड / प्रोग्राम','代码 / 程序','Written instructions for a computer. A program is a set of code that does a job.','कम्प्युटरका लागि लेखिएको निर्देशन। प्रोग्राम भनेको कुनै काम गर्ने कोडको समूह हो।','写给计算机的指令。程序是完成某项工作的一组代码。'),
+G('Variable','भेरिएबल','变量','A named box that stores a value. agent_name = "Sathi" puts "Sathi" into the box called agent_name.','मान राख्ने नाम भएको बाकस। agent_name = "Sathi" ले "Sathi" लाई agent_name नामको बाकसमा राख्छ।','一个有名字、用来存放值的盒子。agent_name = "Sathi" 就是把"Sathi"放进叫 agent_name 的盒子里。'),
+G('String (str)','स्ट्रिङ (str)','字符串（str）','Text, written inside quotes: "hello".','उद्धरण चिह्नभित्र लेखिएको अक्षर: "hello"।','写在引号里的文字："hello"。'),
+G('Integer (int) / float','इन्टिजर (int) / फ्लोट','整数（int）/ 浮点数（float）','int is a whole number like 5. float is a number with a decimal point like 4.0.','int भनेको 5 जस्तो पूर्ण संख्या। float भनेको 4.0 जस्तो दशमलव भएको संख्या।','int 是像5这样的整数。float 是像4.0这样带小数点的数。'),
+G('Boolean (bool)','बुलियन (bool)','布尔值（bool）','A value that is only True or False. if statements use them.','True (साँचो) वा False (झुटो) मात्र हुने मान। if ले यिनै प्रयोग गर्छ।','只能是 True（真）或 False（假）的值。if 语句就用它来判断。'),
+G('List','सूची (list)','列表（list）','Many items in order inside [ ]. Positions start at 0.','[ ] भित्र क्रमैसँग राखिएका धेरै वस्तु। स्थान ० बाट सुरु हुन्छ।','写在 [ ] 里、按顺序排列的多个项目。位置从0开始。'),
+G('Index','इन्डेक्स','索引','The position number of an item in a list. The first item is index 0.','सूचीमा वस्तुको स्थान नम्बर। पहिलो वस्तुको इन्डेक्स ० हो।','列表中某一项的位置编号。第一项的索引是0。'),
+G('Dictionary (dict)','डिक्सनरी (dict)','字典（dict）','Pairs of key: value inside { }. You look up a value by its key, like a word and its meaning.','{ } भित्र key: value का जोडी। key बाट value खोजिन्छ, शब्द र त्यसको अर्थ जस्तै।','写在 { } 里的"键: 值"对。用键来查值，就像查一个词和它的意思。'),
+G('Function','फङ्सन','函数','A named, reusable block of code made with def. You call it by its name with ( ).','def ले बनाइएको, नाम भएको, फेरि प्रयोग गर्न मिल्ने कोडको भाग। नाम र ( ) लेखेर बोलाइन्छ।','用 def 创建的、有名字、可以反复使用的一段代码。用名字加 ( ) 来调用它。'),
+G('Parameter / argument','प्यारामिटर / आर्गुमेन्ट','参数','Inputs to a function. In def add(a, b), a and b are parameters; in add(2, 3), 2 and 3 are the arguments.','फङ्सनका इनपुट। def add(a, b) मा a र b प्यारामिटर हुन्; add(2, 3) मा 2 र 3 आर्गुमेन्ट हुन्।','函数的输入。在 def add(a, b) 里，a 和 b 是形参；在 add(2, 3) 里，2 和 3 是实参。'),
+G('return','return (फर्काउनु)','return（返回）','The word that sends a function\'s answer back to where it was called.','फङ्सनको उत्तर बोलाउने ठाउँमा फिर्ता पठाउने शब्द।','把函数的结果送回到调用它的地方的关键词。'),
+G('Class','क्लास','类（class）','A blueprint for making objects. It describes what data they hold and what they can do.','अब्जेक्ट बनाउने नक्सा (ब्लुप्रिन्ट)। यसले तिनमा के डाटा हुन्छ र के गर्न सक्छन् भनेर वर्णन गर्छ।','制造对象的设计图。它描述对象保存什么数据、能做什么事。'),
+G('Object','अब्जेक्ट (वस्तु)','对象','One real thing built from a class. sathi = Agent("Sathi") creates an Agent object.','क्लासबाट बनेको एउटा साँचो चीज। sathi = Agent("Sathi") ले Agent अब्जेक्ट बनाउँछ।','按照类造出来的一个具体东西。sathi = Agent("Sathi") 就创建了一个 Agent 对象。'),
+G('Method','मेथड','方法','A function that lives inside a class. Called with a dot: sathi.ask("hi").','क्लासभित्र रहने फङ्सन। डट प्रयोग गरेर बोलाइन्छ: sathi.ask("hi")।','写在类里面的函数。用点号调用：sathi.ask("hi")。'),
+G('self','self','self','Inside a class, self means "this object itself", so a method can use its own data like self.name.','क्लासभित्र self को अर्थ "यही अब्जेक्ट आफैँ" हो, ताकि मेथडले self.name जस्तो आफ्नै डाटा प्रयोग गर्न सकोस्।','在类里面，self 表示"这个对象自己"，这样方法就能用到自己的数据，比如 self.name。'),
+G('__init__','__init__','__init__','The setup method that runs automatically when a new object is created.','नयाँ अब्जेक्ट बन्दा आफैँ चल्ने सेटअप मेथड।','创建新对象时自动运行的初始化方法。'),
+G('OOP (Object-Oriented Programming)','OOP (अब्जेक्ट-ओरिएन्टेड प्रोग्रामिङ)','OOP（面向对象编程）','A way of organising code into classes and objects, so each thing keeps its own data and actions together.','कोडलाई क्लास र अब्जेक्टमा मिलाउने तरिका, ताकि हरेक चीजले आफ्नो डाटा र काम सँगै राखोस्।','把代码组织成类和对象的方法，让每个东西把自己的数据和动作放在一起。'),
+G('Loop','लुप','循环','Code that repeats. for repeats for each item; while repeats as long as something is true.','दोहोरिने कोड। for ले हरेक वस्तुका लागि दोहोर्‍याउँछ; while ले कुनै कुरा साँचो रहुन्जेल दोहोर्‍याउँछ।','重复执行的代码。for 对每一项重复一次；while 只要条件为真就一直重复。'),
+G('Indentation','इन्डेन्टेसन','缩进','Spaces at the start of a line (use 4). In Python they show which lines belong inside an if, for, def or class.','लाइनको सुरुमा राखिने space (४ वटा)। Python मा यसले कुन लाइन if, for, def वा class भित्र पर्छ देखाउँछ।','行首的空格（用4个）。在Python里，它表示哪些行属于 if、for、def 或 class 的里面。'),
+G('Comment','टिप्पणी (comment)','注释','A note starting with #. Python ignores it; it is for humans.','# बाट सुरु हुने नोट। Python ले बेवास्ता गर्छ; यो मान्छेका लागि हो।','以 # 开头的笔记。Python会忽略它，它是写给人看的。'),
+G('Library / package / import','लाइब्रेरी / प्याकेज / import','库 / 包 / import','Ready-made code someone else wrote. import brings it into your program, so you do not write everything yourself.','अरू कसैले लेखिसकेको तयारी कोड। import ले त्यसलाई तपाईंको प्रोग्राममा ल्याउँछ, ताकि सबै आफैँ लेख्नु नपरोस्।','别人已经写好的现成代码。import 把它引入你的程序，这样你不必什么都自己写。'),
+G('pip','pip','pip','Python\'s installer: pip install name downloads a library from the internet.','Python को इन्स्टलर: pip install नाम ले इन्टरनेटबाट लाइब्रेरी डाउनलोड गर्छ।','Python的安装工具：pip install 名字 会从网上下载一个库。'),
+G('Terminal','टर्मिनल','终端','A window where you type commands to your computer instead of clicking.','क्लिक गर्नुको सट्टा कम्प्युटरलाई आदेश टाइप गर्ने झ्याल।','一个可以输入命令来操作电脑的窗口，而不是用鼠标点。'),
+G('Virtual environment (venv)','भर्चुअल वातावरण (venv)','虚拟环境（venv）','A private toolbox for one project. Libraries installed while it is active stay inside it.','एउटा प्रोजेक्टको निजी औजार बाकस। सक्रिय हुँदा इन्स्टल गरिएका लाइब्रेरी त्यसैभित्र रहन्छन्।','一个项目专用的私人工具箱。激活时安装的库都留在里面。'),
+G('Environment variable','इन्भाइरोनमेन्ट भेरिएबल','环境变量','A setting your computer remembers by name, often used to store secret keys outside your code.','कम्प्युटरले नामबाट याद राख्ने सेटिङ, प्रायः गोप्य key कोडबाहिर राख्न प्रयोग गरिन्छ।','电脑按名字记住的一个设置，常用来把秘密密钥存在代码之外。'),
+G('JSON','JSON','JSON','A text format for data that looks like Python dictionaries and lists. Programs use it to send data to each other.','Python डिक्सनरी र सूची जस्तै देखिने डाटाको अक्षर ढाँचा। प्रोग्रामहरूले एकअर्कालाई डाटा पठाउन यो प्रयोग गर्छन्।','一种看起来像Python字典和列表的数据文字格式。程序之间用它来传递数据。'),
+G('Tool (in agents)','औजार (एजेन्टमा)','工具（智能体中）','A function the agent can choose to run, like a calculator, clock or web search.','एजेन्टले चलाउन छान्न सक्ने फङ्सन, जस्तै क्याल्कुलेटर, घडी वा वेब खोज।','智能体可以选择运行的函数，比如计算器、时钟或网络搜索。'),
+G('Tool use','टुल युज (औजार प्रयोग)','工具调用（Tool use）','When the AI replies "please run this tool with these inputs" instead of a normal answer. Your code runs it and sends back the result.','AI ले साधारण उत्तरको सट्टा "यो इनपुटसहित यो औजार चलाऊ" भन्ने जवाफ दिनु। तपाईंको कोडले त्यो चलाएर नतिजा फिर्ता पठाउँछ।','AI不是直接回答，而是说"请用这些输入运行这个工具"。你的代码运行它，再把结果发回去。'),
+G('Memory (in agents)','मेमोरी (एजेन्टमा)','记忆（智能体中）','The list of past messages your code keeps and sends to the AI each time, so it knows the conversation.','तपाईंको कोडले राख्ने र हरेक पटक AI लाई पठाउने पुराना सन्देशको सूची, ताकि उसलाई कुराकानी थाहा होस्।','你的代码保存、并且每次都发给AI的历史消息列表，让它知道之前聊了什么。'),
+G('Error / bug','त्रुटि / बग','错误 / Bug','A mistake in code. Python shows an error message telling you what and where. Fixing bugs is called debugging.','कोडमा भएको गल्ती। Python ले के र कहाँ भनेर त्रुटि सन्देश देखाउँछ। बग सुधार्नुलाई डिबगिङ भनिन्छ。'.replace('。','।'),'代码里的错误。Python会显示错误信息，告诉你错在哪里。修复错误叫做调试（debug）。'),
+G('Browser','ब्राउजर','浏览器','The app you use to open websites, like Chrome or Edge. This page and its practice Python run inside it.','वेबसाइट खोल्ने एप, जस्तै Chrome वा Edge। यो पेज र अभ्यासको Python यसैभित्र चल्छ।','用来打开网站的应用，比如Chrome或Edge。本页面和练习用的Python都在里面运行。')
+];
+
+/* ---------- resources ---------- */
+const R=(u,t,d)=>({u,t,d});
+const RES=[
+[T('1. Install these first','१. पहिले यी इन्स्टल गर्नुहोस्','1. 先安装这些'),[
+R('https://www.python.org/downloads/','Python',T('The Python language itself. Free.','Python भाषा आफैँ। निःशुल्क।','Python语言本身，免费。')),
+R('https://code.visualstudio.com/','Visual Studio Code',T('Free code editor. Add the "Python" extension inside it.','निःशुल्क कोड एडिटर। यसभित्र "Python" एक्सटेन्सन थप्नुहोस्।','免费代码编辑器。在里面安装"Python"扩展。'))]],
+[T('2. Learn Python (free)','२. Python सिक्नुहोस् (निःशुल्क)','2. 学习Python（免费）'),[
+R('https://docs.python.org/3/tutorial/','The official Python Tutorial',T('From the makers of Python. Read after this page.','Python बनाउनेहरूकै। यो पेजपछि पढ्नुहोस्।','Python官方教程，学完本页后阅读。')),
+R('https://www.py4e.com/','Python for Everybody',T('Famous free course for total beginners, with videos.','पूर्ण सुरुआतीका लागि प्रसिद्ध निःशुल्क कोर्स, भिडियोसहित।','面向零基础的著名免费课程，有视频。')),
+R('https://www.w3schools.com/python/','W3Schools Python',T('Short lessons with a "Try it yourself" button.','"Try it yourself" बटन भएका छोटा पाठहरू।','短小的课程，带"自己试一试"按钮。')),
+R('https://www.kaggle.com/learn/python','Kaggle Learn: Python',T('Free hands-on Python course used by data and AI learners.','डाटा र AI सिक्नेहरूले प्रयोग गर्ने निःशुल्क अभ्यासमूलक कोर्स।','数据和AI学习者常用的免费实践课程。')),
+R('https://www.runoob.com/python3/python3-tutorial.html','菜鸟教程 Python3',T('Complete Python tutorial written in Chinese.','चिनियाँ भाषामा लेखिएको पूरा Python ट्युटोरियल।','用中文写的完整Python教程。'))]],
+[T('3. Build real agents with Claude','३. Claude सँग साँचो एजेन्ट बनाउनुहोस्','3. 用Claude搭建真正的智能体'),[
+R('https://platform.claude.com/','Claude Platform',T('Create your account and API key here.','यहाँ खाता र API key बनाउनुहोस्।','在这里注册账号并创建API密钥。')),
+R('https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview','Tool use with Claude',T('Official guide to giving Claude tools (Lesson 12).','Claude लाई औजार दिने आधिकारिक गाइड (पाठ १२)।','给Claude添加工具的官方指南（第12课）。')),
+R('https://platform.claude.com/docs/zh-CN/agents-and-tools/tool-use/overview','Tool use with Claude (中文)',T('The same guide in Chinese.','उही गाइड चिनियाँमा।','同一份指南的中文版。')),
+R('https://www.anthropic.com/engineering/building-effective-agents','Building effective agents',T('Anthropic\'s guide: start simple, add complexity only when needed.','Anthropic को गाइड: सरलबाट सुरु गर्ने, चाहिँदा मात्र जटिलता थप्ने।','Anthropic的指南：从简单开始，只在需要时才增加复杂度。'))]]
+];
+
+GLOSS.push(
+G('Framework','फ्रेमवर्क','框架','A big ready-made kit of code that does the common work for you, so you only write the parts that are special to your project.','तपाईंका लागि सामान्य काम गरिदिने तयारी कोडको ठूलो किट, ताकि तपाईंले आफ्नो प्रोजेक्टका विशेष भाग मात्र लेख्नुपरोस्।','一大套现成的代码工具包，帮你完成常见的工作，你只需要写自己项目特有的部分。'),
+G('LangChain','LangChain','LangChain','A popular Python framework for building AI agents: tools, models, middleware and create_agent in one kit.','AI एजेन्ट बनाउने लोकप्रिय Python फ्रेमवर्क: औजार, मोडेल, मिडलवेयर र create_agent एउटै किटमा।','一个流行的Python智能体开发框架：工具、模型、中间件和 create_agent 都在一个工具包里。'),
+G('LangGraph','LangGraph','LangGraph','A framework for building agents as graphs (maps of steps) with nodes, edges and shared state. Good for loops, teams and pausing for humans.','एजेन्टलाई नोड, एज र साझा स्टेटसहितको ग्राफ (चरणहरूको नक्सा) को रूपमा बनाउने फ्रेमवर्क। लुप, टोली र मान्छेका लागि रोक्न राम्रो।','用"图"（步骤地图）来搭建智能体的框架，有节点、边和共享状态。适合做循环、团队协作和暂停等人确认。'),
+G('Middleware','मिडलवेयर','中间件','Code that runs before or after each step of an agent, like a checkpoint: logging, limits, safety checks, human approval.','एजेन्टको हरेक चरणअघि वा पछि चल्ने कोड, जाँच-चौकी जस्तै: रेकर्ड, सीमा, सुरक्षा जाँच, मानिसको स्वीकृति।','在智能体每一步之前或之后运行的代码，像检查站：记录日志、限制次数、安全检查、人工审批。'),
+G('Decorator (@)','डेकोरेटर (@)','装饰器（@）','A line starting with @ above a function. It passes the function through another function to add extra behaviour, like @tool.','फङ्सनमाथि @ बाट सुरु हुने लाइन। यसले थप व्यवहार थप्न फङ्सनलाई अर्को फङ्सनबाट पार गराउँछ, जस्तै @tool।','写在函数上方、以 @ 开头的一行。它让这个函数经过另一个函数处理，以增加额外功能，比如 @tool。'),
+G('Docstring','डकस्ट्रिङ (docstring)','文档字符串','Text in triple quotes right under a def line that explains what the function does. AI agents read it to understand tools.','def लाइनको ठीक तल तीन उद्धरण चिह्नभित्र लेखिएको, फङ्सनले के गर्छ भनेर बताउने अक्षर। औजार बुझ्न AI एजेन्टले यही पढ्छ।','写在 def 行下面、用三引号括起来的说明文字，解释函数的作用。AI智能体靠读它来理解工具。'),
+G('Type hint','टाइप हिन्ट','类型提示','A label like city: str or -> int that says what kind of data is expected. Python does not force it, but tools like LangChain read it.','city: str वा -> int जस्तो लेबल, जसले कस्तो डाटा अपेक्षित छ भन्छ। Python ले जबरजस्ती गर्दैन, तर LangChain जस्ता औजारले पढ्छन्।','像 city: str 或 -> int 这样的标注，说明需要什么类型的数据。Python不会强制检查，但LangChain等工具会读取它。'),
+G('Node / edge / state','नोड / एज / स्टेट','节点 / 边 / 状态','In a graph: a node is one step, an edge is the path to the next step, and the state is the shared data every step can read and update.','ग्राफमा: नोड एउटा चरण, एज अर्को चरणसम्मको बाटो, र स्टेट हरेक चरणले पढ्न र अद्यावधिक गर्न सक्ने साझा डाटा हो।','在图里：节点是一个步骤，边是通往下一步的路，状态是每一步都能读取和更新的共享数据。'),
+G('Conditional edge / routing','सर्तसहितको एज / रुटिङ','条件边 / 路由','A crossroads in a graph: a small function looks at the state and decides which step comes next.','ग्राफको चौबाटो: सानो फङ्सनले स्टेट हेरेर अर्को चरण कुन हो तय गर्छ।','图中的十字路口：一个小函数查看状态，决定下一步走哪里。'),
+G('Checkpointer','चेकपोइन्टर','检查点保存器','Something that saves the agent’s state after each step, like saving a game, so it can remember conversations and resume after a pause.','हरेक चरणपछि एजेन्टको स्टेट सेभ गर्ने चीज, गेम सेभ गरे जस्तै, ताकि कुराकानी याद राख्न र रोकाइपछि अगाडि बढ्न सकोस्।','在每一步之后保存智能体状态的东西，像游戏存档，让它能记住对话、暂停后继续。'),
+G('Thread / thread_id','थ्रेड / thread_id','线程 / thread_id','One separate conversation. The thread_id is its name, so each user’s memory stays apart.','एउटा छुट्टै कुराकानी। thread_id त्यसको नाम हो, ताकि हरेक प्रयोगकर्ताको मेमोरी छुट्टै रहोस्।','一段独立的对话。thread_id 是它的名字，让每个用户的记忆分开保存。'),
+G('Human in the loop (HITL)','ह्युमन इन द लुप (HITL)','人在回路中（HITL）','A person must approve, edit or reject important actions before the agent does them.','एजेन्टले महत्त्वपूर्ण काम गर्नुअघि मान्छेले स्वीकृति, सम्पादन वा अस्वीकार गर्नैपर्छ।','智能体执行重要操作之前，必须由人批准、修改或拒绝。'),
+G('Interrupt','इन्टरप्ट','中断（interrupt）','A pause in a LangGraph run that waits for a human answer, then continues with Command(resume=...).','LangGraph चलिरहँदा मान्छेको उत्तर पर्खने रोकाइ, त्यसपछि Command(resume=...) ले अगाडि बढ्छ।','LangGraph运行中的一次暂停，等待人的回答，然后用 Command(resume=...) 继续。'),
+G('Multi-agent system / supervisor','बहु-एजेन्ट प्रणाली / सुपरभाइजर','多智能体系统 / 主管','A team of agents. The supervisor reads each task and sends it to the right specialist agent.','एजेन्टहरूको टोली। सुपरभाइजरले हरेक काम पढेर सही विशेषज्ञ एजेन्टकहाँ पठाउँछ।','由多个智能体组成的团队。主管读懂每个任务，把它交给合适的专家智能体。'),
+G('Subagent','सब-एजेन्ट','子智能体','A helper agent the main agent sends off to do one part of a job with a clean memory. It returns a short report.','मुख्य एजेन्टले सफा मेमोरीसहित कामको एउटा भाग गर्न पठाउने सहयोगी एजेन्ट। यसले छोटो रिपोर्ट फर्काउँछ।','主智能体派出去、带着干净记忆完成一部分工作的助手智能体。它会交回一份简短报告。'),
+G('Deep agent','डिप एजेन्ट','深度智能体','An agent built for long, complex tasks: it plans with a to-do list, keeps notes in files and uses subagents.','लामो, जटिल कामका लागि बनाइएको एजेन्ट: कामको सूचीले योजना बनाउँछ, फाइलमा नोट राख्छ र सब-एजेन्ट प्रयोग गर्छ।','为长而复杂的任务设计的智能体：用待办清单做计划、在文件里记笔记，并使用子智能体。'),
+G('Context window','कन्टेक्स्ट विन्डो','上下文窗口','How much text an AI model can look at in one go: instructions, history and tool results must all fit.','AI मोडेलले एकै पटकमा हेर्न सक्ने अक्षरको मात्रा: निर्देशन, इतिहास र औजारका नतिजा सबै अटाउनुपर्छ।','AI模型一次能看到的文字量：指令、历史和工具结果都必须放得下。'),
+G('Temperature','टेम्परेचर','温度（temperature）','A setting for how creative or random the AI’s answers are. Low = steady, high = creative.','AI का उत्तर कति सिर्जनशील वा अनियमित हुन्छन् भन्ने सेटिङ। कम = स्थिर, धेरै = सिर्जनशील।','控制AI回答有多大创意或随机性的设置。低 = 稳定，高 = 有创意。'),
+G('Hallucination','ह्यालुसिनेसन','幻觉','When an AI states something false as if it were true. Tools, sources and tests help reduce it.','AI ले झुटो कुरालाई साँचो जस्तो गरी भन्नु। औजार, स्रोत र परीक्षणले यसलाई घटाउन मद्दत गर्छन्।','AI把错误的内容当成事实说出来。工具、资料来源和测试可以帮助减少这种情况。'),
+G('Structured output','संरचित आउटपुट','结构化输出','An AI answer in a fixed shape, such as JSON with set keys, so code can use it reliably.','तोकिएको ढाँचामा AI को उत्तर, जस्तै निश्चित key भएको JSON, ताकि कोडले भरपर्दो तरिकाले प्रयोग गर्न सकोस्।','按固定格式给出的AI回答，比如带指定键的JSON，方便代码可靠地使用。'),
+G('Guardrail','गार्डरेल','护栏（guardrail）','An automatic check that blocks or flags risky inputs or actions.','जोखिमपूर्ण इनपुट वा कामलाई रोक्ने वा चिन्ह लगाउने स्वचालित जाँच।','自动拦截或标记有风险的输入或操作的检查。'),
+G('Audit log','अडिट लग','审计日志','A record of every action the agent took, kept so people can check it later.','एजेन्टले गरेका हरेक कामको रेकर्ड, पछि मान्छेले जाँच्न सकून् भनेर राखिएको।','智能体做过的每个操作的记录，保存下来供人们事后检查。'),
+G('Evaluation (evals)','मूल्याङ्कन (evals)','评估（evals）','Testing an agent with questions whose right answers you know, to measure how well it works.','सही उत्तर थाहा भएका प्रश्नले एजेन्टको परीक्षण गरेर ऊ कति राम्रो काम गर्छ नाप्नु।','用已知正确答案的问题测试智能体，衡量它的表现好坏。'),
+G('Prompt injection','प्रम्प्ट इन्जेक्सन','提示词注入','A trick where hidden instructions inside a web page, email or file try to make an agent do something it should not.','वेब पेज, इमेल वा फाइलभित्र लुकाइएका निर्देशनले एजेन्टलाई नगर्नुपर्ने काम गराउन खोज्ने छल।','把指令藏在网页、邮件或文件里，试图让智能体做不该做的事情的骗术。'),
+G('Governance','सुशासन (गभर्नेन्स)','治理','The rules, roles and checks an organisation uses to make sure AI is used safely, fairly and legally.','AI सुरक्षित, न्यायपूर्ण र कानुनी रूपमा प्रयोग भएको सुनिश्चित गर्न संस्थाले प्रयोग गर्ने नियम, भूमिका र जाँच।','组织为确保AI被安全、公平、合法地使用而制定的规则、职责和检查。')
+);
+RES.push([T('4. Advanced track: LangChain, LangGraph, Deep Agents','४. उन्नत खण्ड: LangChain, LangGraph, Deep Agents','4. 进阶：LangChain、LangGraph、Deep Agents'),[
+R('https://www.smu.ca/sobey/mban/agentic-ai-curriculum.html','SMU MBAN: Agentic AI curriculum',T('The course outline that lessons 13–21 follow (the topics only; the lessons here are written fresh for beginners).','पाठ १३–२१ ले पछ्याएको कोर्सको रूपरेखा (विषय मात्र; यहाँका पाठ सुरुआतीका लागि नयाँ लेखिएका हुन्)।','第13–21课所参考的课程大纲（只参考了主题；这里的课程是为初学者重新编写的）。')),
+R('https://docs.langchain.com/oss/python/langchain/overview','LangChain docs',T('Official guide: create_agent, tools, middleware, memory.','आधिकारिक गाइड: create_agent, औजार, मिडलवेयर, मेमोरी।','官方指南：create_agent、工具、中间件、记忆。')),
+R('https://docs.langchain.com/oss/python/langchain/human-in-the-loop','LangChain: human in the loop',T('How to pause an agent for approval and resume it.','स्वीकृतिका लागि एजेन्ट रोक्ने र फेरि चलाउने तरिका।','如何暂停智能体等待审批，再继续运行。')),
+R('https://docs.langchain.com/oss/python/langgraph/overview','LangGraph docs',T('Official guide to graphs, state, checkpoints and interrupts.','ग्राफ, स्टेट, चेकपोइन्ट र इन्टरप्टको आधिकारिक गाइड।','关于图、状态、检查点和中断的官方指南。')),
+R('https://docs.langchain.com/oss/python/deepagents/overview','Deep Agents docs',T('Planning, file system and subagents for long tasks.','लामो कामका लागि योजना, फाइल प्रणाली र सब-एजेन्ट।','用于长任务的计划、文件系统和子智能体。')),
+R('https://academy.langchain.com/','LangChain Academy',T('Free video courses on LangChain and LangGraph.','LangChain र LangGraph का निःशुल्क भिडियो कोर्स।','关于LangChain和LangGraph的免费视频课程。'))]]);
+Object.assign(UI,{
+bgBtn:T('Background','पृष्ठभूमि','背景'),
+bgTitle:T('Choose your background','आफ्नो पृष्ठभूमि छान्नुहोस्','选择你的背景'),
+bgHelp:T('Pick a design, your own colour, or your own picture. Your choice is remembered in this browser.','डिजाइन, आफ्नै रङ, वा आफ्नै तस्बिर छान्नुहोस्। तपाईंको छनोट यही ब्राउजरमा याद रहन्छ।','选择一个设计、你自己的颜色或你自己的图片。你的选择会保存在这个浏览器里。'),
+bgColor:T('Your own colour','आफ्नै रङ','自定义颜色'),
+bgImage:T('Your own picture','आफ्नै तस्बिर','自定义图片'),
+bgVeil:T('Text readability','अक्षर पढ्न सजिलो','文字清晰度'),
+bgReset:T('Back to plain','सादा पृष्ठभूमिमा फर्कनुहोस्','恢复纯色'),
+bgClose:T('Done','सकियो','完成'),
+bgBig:T('This picture is too big to remember after you close the page, but it works now.','पेज बन्द गरेपछि याद राख्न यो तस्बिर धेरै ठूलो छ, तर अहिले चल्छ।','这张图片太大，关闭页面后无法记住，但现在可以使用。'),
+adv:T('Advanced','उन्नत','进阶')
+});
+const BGNAMES={plain:T('Plain','सादा','纯色'),himalaya:T('Himalaya sunrise','हिमाल सूर्योदय','喜马拉雅日出'),flags:T('Prayer flags','लुङ्दार (प्रार्थना झण्डा)','经幡'),lanterns:T('Red lanterns','रातो लालटिन','红灯笼'),sakura:T('Cherry blossom','चेरी फूल','樱花'),night:T('Starry night','तारामय रात','星空'),aurora:T('Aurora','अरोरा','极光'),ocean:T('Ocean waves','समुद्री छाल','海浪'),blueprint:T('Blueprint','ब्लुप्रिन्ट','蓝图'),paper:T('Dotted paper','थोप्ले कागज','点阵纸')};
+
+/* ---------- backgrounds ---------- */
+function rng(seed){let s=seed;return()=>(s=(s*16807)%2147483647)/2147483647}
+const SV=(w,h,body)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice">${body}</svg>`;
+const BG={
+himalaya:()=>SV(1600,900,`<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbc58a"/><stop offset=".5" stop-color="#f28b66"/><stop offset="1" stop-color="#6d597a"/></linearGradient></defs><rect width="1600" height="900" fill="url(#s)"/><circle cx="1180" cy="290" r="90" fill="#fff1c1"/><path d="M0 620L220 380L330 470L520 240L700 450L860 330L1060 520L1260 300L1450 480L1600 400V900H0Z" fill="#8a7ca0"/><path d="M520 240L478 292L500 284L520 300L545 286L566 296ZM1260 300L1222 346L1242 338L1262 352L1284 340L1300 348ZM220 380L188 418L206 412L222 424L240 414Z" fill="#fff"/><path d="M0 720L260 520L460 640L700 500L940 660L1200 520L1400 640L1600 560V900H0Z" fill="#4a4e69"/><path d="M0 820L300 700L600 790L900 690L1200 800L1600 700V900H0Z" fill="#22223b"/>`),
+flags:()=>{const C=['#1d4ed8','#ffffff','#dc2626','#16a34a','#facc15'];let f='';
+ [[0,140,1600,180,560],[0,330,1600,300,520]].forEach(([x1,y1,x2,y2,sag],r)=>{for(let i=0;i<=40;i++){const t=i/40,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t+Math.sin(Math.PI*t)*sag*.25;f+=`<rect x="${x-14}" y="${y}" width="30" height="40" fill="${C[(i+r)%5]}" stroke="#0002" transform="rotate(${(t-.5)*10} ${x} ${y})"/>`}
+ f+=`<path d="M${x1} ${y1}Q${(x1+x2)/2} ${(y1+y2)/2+sag*.5} ${x2} ${y2}" stroke="#5b4636" stroke-width="2" fill="none"/>`});
+ return SV(1600,900,`<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc6ff"/><stop offset="1" stop-color="#e6f4ff"/></linearGradient></defs><rect width="1600" height="900" fill="url(#s)"/><path d="M0 760L300 560L520 680L800 500L1080 690L1340 560L1600 660V900H0Z" fill="#cfe3f2"/><path d="M800 500L760 548L784 540L804 556L826 544L846 552Z" fill="#fff"/><path d="M0 840L400 760L800 830L1200 750L1600 820V900H0Z" fill="#9cc3a4"/>`+f)},
+lanterns:()=>{let l='';const r=rng(7);for(let i=0;i<9;i++){const x=90+i*180+r()*40,y=80+r()*260,s=.8+r()*.6;
+ l+=`<g transform="translate(${x} ${y}) scale(${s})"><line x1="0" y1="${-y/s}" x2="0" y2="-36" stroke="#d4a017" stroke-width="2"/><rect x="-18" y="-40" width="36" height="10" fill="#d4a017"/><ellipse cx="0" cy="10" rx="48" ry="48" fill="#e02424"/><path d="M-20 -36Q-36 10-20 56M0-38V58M20-36Q36 10 20 56" stroke="#a61b1b" stroke-width="3" fill="none"/><rect x="-18" y="52" width="36" height="10" fill="#d4a017"/><path d="M-8 62v34M0 62v40M8 62v34" stroke="#d4a017" stroke-width="3"/></g>`}
+ return SV(1600,900,`<defs><radialGradient id="g" cx=".5" cy=".3" r=".9"><stop offset="0" stop-color="#7a1010"/><stop offset="1" stop-color="#2a0505"/></radialGradient></defs><rect width="1600" height="900" fill="url(#g)"/>`+l)},
+sakura:()=>{let p='';const r=rng(11);for(let i=0;i<90;i++){const x=r()*1600,y=r()*900,s=6+r()*14;p+=`<ellipse cx="${x}" cy="${y}" rx="${s}" ry="${s*.6}" fill="${r()>.5?'#ffb7c5':'#ffd6e0'}" opacity=".9" transform="rotate(${r()*180} ${x} ${y})"/>`}
+ return SV(1600,900,`<defs><linearGradient id="s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff0f4"/><stop offset="1" stop-color="#f9c6d3"/></linearGradient></defs><rect width="1600" height="900" fill="url(#s)"/><path d="M0 120C200 140 320 220 420 330M300 180C340 120 420 90 520 100M120 130C160 200 150 260 120 320" stroke="#6b3f2a" stroke-width="10" fill="none" stroke-linecap="round"/>`+p)},
+night:()=>{let st='';const r=rng(3);for(let i=0;i<220;i++)st+=`<circle cx="${r()*1600}" cy="${r()*900}" r="${r()*1.8+.3}" fill="#fff" opacity="${.4+r()*.6}"/>`;
+ return SV(1600,900,`<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1026"/><stop offset="1" stop-color="#1c2541"/></linearGradient></defs><rect width="1600" height="900" fill="url(#s)"/>${st}<circle cx="1300" cy="170" r="60" fill="#f4f1de"/><circle cx="1325" cy="155" r="60" fill="#111a36"/><path d="M0 800L400 700L800 780L1200 690L1600 760V900H0Z" fill="#070b1a"/>`)},
+aurora:()=>SV(1600,900,`<defs><filter id="b"><feGaussianBlur stdDeviation="60"/></filter></defs><rect width="1600" height="900" fill="#071a2b"/><g filter="url(#b)"><ellipse cx="400" cy="300" rx="420" ry="120" fill="#2ee6a6" opacity=".7" transform="rotate(-12 400 300)"/><ellipse cx="1000" cy="260" rx="460" ry="110" fill="#7b5cff" opacity=".6" transform="rotate(8 1000 260)"/><ellipse cx="1300" cy="420" rx="300" ry="90" fill="#25c2ff" opacity=".5"/></g><path d="M0 820L260 760L520 800L800 740L1100 800L1600 750V900H0Z" fill="#020a12"/>`),
+ocean:()=>SV(1600,900,`<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe9ff"/><stop offset=".45" stop-color="#5fb4e8"/><stop offset="1" stop-color="#0b3d6e"/></linearGradient></defs><rect width="1600" height="900" fill="url(#s)"/><path d="M0 470C200 430 400 510 600 470S1000 430 1200 470S1500 500 1600 470V900H0Z" fill="#2f86c4"/><path d="M0 580C200 540 400 620 600 580S1000 540 1200 580S1500 610 1600 580V900H0Z" fill="#1f6aa5"/><path d="M0 700C200 660 400 740 600 700S1000 660 1200 700S1500 730 1600 700V900H0Z" fill="#14507f"/><path d="M0 810C200 780 400 840 600 810S1000 780 1200 810S1500 830 1600 810V900H0Z" fill="#0b3557"/>`),
+blueprint:()=>{let g='';for(let x=0;x<=1600;x+=40)g+=`<line x1="${x}" y1="0" x2="${x}" y2="900" stroke="#fff" stroke-opacity="${x%200?.08:.2}"/>`;for(let y=0;y<=900;y+=40)g+=`<line x1="0" y1="${y}" x2="1600" y2="${y}" stroke="#fff" stroke-opacity="${y%200?.08:.2}"/>`;
+ return SV(1600,900,`<rect width="1600" height="900" fill="#0f4c81"/>${g}<g fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"><rect x="1100" y="520" width="300" height="200"/><circle cx="1250" cy="620" r="60"/><path d="M1100 760h300M1100 750v20M1400 750v20"/></g>`)},
+paper:()=>SV(1600,900,`<defs><pattern id="d" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="#b9b3a3"/></pattern></defs><rect width="1600" height="900" fill="#f6f3ea"/><rect width="1600" height="900" fill="url(#d)"/>`)
+};
+const bgUrl=id=>BG[id]?`url("data:image/svg+xml,${encodeURIComponent(BG[id]())}")`:'none';
+let bgCache={};
+function applyBg(){
+ const st=store.get('bg')||{type:'plain'},layer=document.getElementById('bgLayer'),root=document.documentElement;
+ layer.style.backgroundImage='none';layer.style.backgroundColor='';
+ if(st.type==='design'&&BG[st.id]){layer.style.backgroundImage=bgCache[st.id]||(bgCache[st.id]=bgUrl(st.id))}
+ else if(st.type==='color'){layer.style.backgroundColor=st.v}
+ else if(st.type==='image'&&(st.v||window.__bgImg)){layer.style.backgroundImage=`url("${st.v||window.__bgImg}")`}
+ root.classList.toggle('has-bg',st.type!=='plain'&&!(st.type==='image'&&!(st.v||window.__bgImg)));
+ const veil=store.get('veil')||88;root.style.setProperty('--veilp',veil+'%');document.getElementById('bgVeil').value=veil;
+ for(const b of document.querySelectorAll('#swatches button'))b.setAttribute('aria-pressed',(st.type==='plain'&&b.dataset.bg==='plain')||(st.type==='design'&&st.id===b.dataset.bg));
+}
+function renderSwatches(){
+ document.getElementById('swatches').innerHTML=Object.keys(BGNAMES).map(id=>`<button data-bg="${id}" aria-pressed="false"><i style='background:${id==='plain'?'var(--bg)':(bgCache[id]||(bgCache[id]=bgUrl(id)))};background-size:cover'></i><span>${esc(L(BGNAMES[id]))}</span></button>`).join('');
+ applyBg();
+}
+const panel=document.getElementById('bgPanel'),bgBtn=document.getElementById('bgBtn');
+const openPanel=o=>{panel.hidden=!o;bgBtn.setAttribute('aria-expanded',o);if(o)panel.querySelector('button')?.focus();else bgBtn.focus()};
+bgBtn.addEventListener('click',()=>openPanel(panel.hidden));
+document.getElementById('bgClose').addEventListener('click',()=>openPanel(false));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden)openPanel(false)});
+document.getElementById('swatches').addEventListener('click',e=>{const b=e.target.closest('[data-bg]');if(!b)return;store.set('bg',b.dataset.bg==='plain'?{type:'plain'}:{type:'design',id:b.dataset.bg});applyBg()});
+document.getElementById('bgColor').addEventListener('input',e=>{store.set('bg',{type:'color',v:e.target.value});applyBg()});
+document.getElementById('bgVeil').addEventListener('input',e=>{store.set('veil',+e.target.value);applyBg()});
+document.getElementById('bgReset').addEventListener('click',()=>{store.set('bg',{type:'plain'});store.set('veil',88);document.getElementById('bgMsg').textContent='';applyBg()});
+document.getElementById('bgFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();
+ rd.onload=()=>{const img=new Image();img.onload=()=>{const sc=Math.min(1,1920/img.width),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const data=c.toDataURL('image/jpeg',.82);window.__bgImg=data;let saved=false;
+  try{localStorage.setItem('agentschool.bg',JSON.stringify({type:'image',v:data}));saved=true}catch(err){}
+  if(!saved)store.set('bg',{type:'image'});
+  document.getElementById('bgMsg').textContent=saved?'':L(UI.bgBig);applyBg()};img.src=rd.result};rd.readAsDataURL(f)});
+
+/* ---------- picture ---------- */
+function box(x,y,w,h,d,front,top,side,id,sub){
+ return `<g><ellipse cx="${x+w/2+d/2}" cy="${y+h+8}" rx="${w/2+d}" ry="10" fill="#000" opacity=".12"/>
+ <polygon points="${x},${y} ${x+d},${y-d} ${x+w+d},${y-d} ${x+w},${y}" fill="${top}" stroke="#141414" stroke-width="2"/>
+ <polygon points="${x+w},${y} ${x+w+d},${y-d} ${x+w+d},${y+h-d} ${x+w},${y+h}" fill="${side}" stroke="#141414" stroke-width="2"/>
+ <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${front}" stroke="#141414" stroke-width="2"/>
+ <text x="${x+w/2}" y="${y+h/2-2}" text-anchor="middle" font-size="22" font-weight="700" fill="#141414" data-p="${id}"></text>
+ <text x="${x+w/2}" y="${y+h/2+20}" text-anchor="middle" font-size="13" fill="#141414" data-p="${sub}"></text></g>`;
+}
+function drawPic(){
+ const s=document.getElementById('hero');
+ s.innerHTML=`<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+ <g style="color:var(--ink)" fill="none" stroke="currentColor" stroke-width="2.5">
+  <path class="flow" d="M118 150 C160 120 190 120 228 128" marker-end="url(#ar)"/>
+  <path class="flow" d="M228 196 C190 214 160 214 118 196" marker-end="url(#ar)"/>
+  <path class="flow" d="M392 132 C430 112 452 112 470 132" marker-end="url(#ar)"/>
+  <path class="flow" d="M470 214 C446 236 420 230 394 204" marker-end="url(#ar)"/>
+  <path class="flow" d="M300 228 L300 262" marker-end="url(#ar)"/>
+  <path class="flow" d="M330 262 L330 228" marker-end="url(#ar)"/>
+ </g>
+ <ellipse cx="76" cy="262" rx="40" ry="10" fill="#000" opacity=".12"/>
+ <circle cx="76" cy="132" r="26" fill="var(--con)" stroke="var(--ink)" stroke-width="2"/>
+ <path d="M34 260 C34 196 52 170 76 170 C100 170 118 196 118 260Z" fill="var(--con)" stroke="var(--ink)" stroke-width="2"/>
+ <text x="76" y="292" text-anchor="middle" font-size="20" font-weight="700" fill="var(--ink)" data-p="you"></text>
+ <text x="172" y="108" text-anchor="middle" font-size="13" fill="var(--ink)" data-p="ask"></text>
+ <text x="172" y="236" text-anchor="middle" font-size="13" fill="var(--ink)" data-p="ans"></text>
+ ${box(232,96,156,128,22,'#ffe600','#fff27a','#d9c400','brain','brainS')}
+ ${box(474,120,124,100,18,'#d8d8d4','#ececea','#b8b8b3','tools','toolsS')}
+ <rect x="490" y="186" width="36" height="22" fill="#fff" stroke="#141414" stroke-width="2"/><circle cx="560" cy="197" r="11" fill="#fff" stroke="#141414" stroke-width="2"/><path d="M560 190v7h6" stroke="#141414" stroke-width="2" fill="none"/>
+ ${box(240,268,140,84,18,'#ffffff','#f1f1ee','#cfcfca','mem','memS')}
+ <text x="320" y="390" text-anchor="middle" font-size="15" font-weight="600" fill="var(--ink)" data-p="loop"></text>`;
+ for(const t of s.querySelectorAll('[data-p]'))t.textContent=L(UI.pic[t.dataset.p]);
+}
+
+/* ---------- progress ---------- */
+let done=new Set(store.get('done')||[]);
+const allSteps=[];MODS.forEach((m,i)=>m.s.forEach((s,j)=>allSteps.push(i+'-'+j)));
+function markDone(k){done.add(k);store.set('done',[...done]);updProg()}
+function updProg(){const n=allSteps.filter(k=>done.has(k)).length,p=Math.round(n/allSteps.length*100);document.getElementById('pfill').style.width=p+'%';document.getElementById('ptxt').textContent=p+'%';renderNav()}
+
+/* ---------- code display ---------- */
+function hl(code){
+ return code.split('\n').map(line=>{
+  let out='',inS=null,i=0,buf='';
+  const flush=c=>{out+=c?`<span class="${c}">${esc(buf)}</span>`:esc(buf);buf=''};
+  for(;i<line.length;i++){const ch=line[i];
+   if(inS){buf+=ch;if(ch===inS){flush('s');inS=null}}
+   else if(ch==='"'||ch==="'"){flush('');inS=ch;buf=ch}
+   else if(ch==='#'){flush('');buf=line.slice(i);flush('c');break}
+   else buf+=ch}
+  flush(inS?'s':'');return out}).join('\n');
+}
+
+/* ---------- Python engine ---------- */
+let pyP=null;
+const PYV='https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+function getPy(){
+ if(pyP)return pyP;
+ pyP=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=PYV+'pyodide.js';
+  sc.onload=()=>{loadPyodide({indexURL:PYV}).then(res,rej)};sc.onerror=()=>rej(new Error('load'));document.head.appendChild(sc)});
+ pyP.catch(()=>{pyP=null});return pyP;
+}
+async function runPy(prev,code){
+ const py=await getPy();let buf='';
+ py.setStdout({batched:s=>{buf+=s+'\n'}});py.setStderr({batched:s=>{buf+=s+'\n'}});
+ const g=py.globals.get('dict')();
+ try{
+  if(prev.trim()){py.runPython(prev,{globals:g});buf=''}
+  py.runPython(code,{globals:g});return {ok:true,out:buf};
+ }catch(e){return {ok:false,out:buf,err:String(e.message||e)}}
+ finally{g.destroy()}
+}
+function friendly(err){
+ const lines=err.trim().split('\n').filter(Boolean),last=lines[lines.length-1]||err;
+ let ln='';for(const l of lines){const m=l.match(/File "<exec>", line (\d+)/);if(m)ln=m[1]}
+ const kind=(last.match(/^(\w+Error)/)||[])[1];
+ const hint=L(ERR[kind]||ERR.other);
+ const where=ln?(lang==='zh'?`（第 ${ln} 行）`:lang==='ne'?` (लाइन ${ln})`:` (line ${ln})`):'';
+ return `<span class="e">${esc(L(UI.errHead))}\n\n${esc(last)}${esc(where)}\n\n${esc(hint)}</span>`;
+}
+async function doRun(outEl,prev,code,fallback){
+ outEl.textContent=L(UI.loading);
+ try{const r=await runPy(prev,code);
+  if(r.ok){outEl.textContent=r.out.trim()?r.out.replace(/\n$/,''):L(UI.noOut);return true}
+  outEl.innerHTML=(r.out?esc(r.out)+'\n':'')+friendly(r.err);return false;
+ }catch(e){outEl.textContent=L(UI.noPy)+(fallback?'\n\n'+fallback:'');return null}
+}
+
+/* ---------- checking ---------- */
+const norm=s=>s.replace(/\r/g,'').replace(/\t/g,'    ').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").split('\n').map(l=>l.replace(/\s+$/,'')).filter(l=>l.trim()!=='');
+function check(typed,want){
+ const a=norm(typed),b=norm(want);
+ if(!a.length)return {ok:false,msg:L(UI.empty)};
+ const q=l=>l.replace(/'/g,'"').replace(/\s*([=,:()\[\]{}+*\/<>-])\s*/g,'$1');
+ for(let i=0;i<b.length;i++){
+  if(a[i]===undefined)return {ok:false,line:i+1,want:b[i],got:L(UI.missing)};
+  if(q(a[i])!==q(b[i])||a[i].match(/^ */)[0].length!==b[i].match(/^ */)[0].length)
+   return {ok:false,line:i+1,want:b[i],got:a[i],ind:a[i].match(/^ */)[0].length!==b[i].match(/^ */)[0].length};
+ }
+ if(a.length>b.length)return {ok:false,msg:L(UI.extra)};
+ return {ok:true};
+}
+
+/* ---------- lesson view ---------- */
+let cur=0;
+function renderNav(){
+ document.getElementById('nav').innerHTML=MODS.map((m,i)=>{const full=m.s.every((s,j)=>done.has(i+'-'+j));
+  return (m.track?`<div class="trackhead">${esc(L(UI.adv))}</div>`:'')+`<a href="#lesson-${i}" ${i===cur?'aria-current="true"':''}><b>${String(i).padStart(2,'0')}</b><span class="t">${esc(L(m.t))}</span><i class="dot${full?' full':''}"></i></a>`}).join('');
+}
+const prevCode=(mi,sj)=>[MODS[mi].pre||'',...MODS[mi].s.slice(0,sj).map(s=>s.code||'')].join('\n\n');
+function renderLesson(i){
+ cur=i;const m=MODS[i];
+ const head=`${L(UI.lesson)} ${i}${L(UI.lessonSuf)}`;
+ const adv=MODS.findIndex(x=>x.track);
+ let h=(adv>-1&&i>=adv?`<span class="tag">${esc(L(TRACK2))}</span>`:'')+`<h2>${esc(head)} · ${esc(L(m.t))}</h2><p class="lead">${esc(L(m.d))}</p>`;
+ if(m.pre)h+=`<details class="pre box"><summary class="boxhead">${esc(L(UI.earlier))}</summary><pre class="src">${hl(m.pre)}</pre></details>`;
+ h+=m.s.map((s,j)=>{const k=i+'-'+j,isDone=done.has(k);
+  let b=`<article class="step" id="st-${k}"><h3><span class="n">${j+1}</span><span>${esc(L(s.t))}</span>${isDone?`<span class="ok">✓ ${esc(L(UI.done))}</span>`:''}</h3><div class="x">${L(s.x)}</div>`;
+  if(s.code){
+   b+=`<div class="box"><div class="boxhead"><span>${esc(s.local?L(UI.runsHere):L(UI.code))}</span><button class="small" data-act="copy" data-k="${k}">${esc(L(UI.copy))}</button></div><pre class="src">${hl(s.code)}</pre>`;
+   if(!s.local){
+    const saved=store.get('typed.'+k)||'';
+    b+=`<label class="boxhead" for="ta-${k}" style="background:var(--con2)">${esc(L(UI.type))}</label><textarea class="code" id="ta-${k}" data-k="${k}" spellcheck="false" autocapitalize="off" autocomplete="off" rows="${Math.max(3,s.code.split('\n').length+1)}">${esc(saved)}</textarea>
+    <div class="btns"><button class="btn" data-act="check" data-k="${k}">${esc(L(UI.check))}</button><button class="btn pri" data-act="run" data-k="${k}">▶ ${esc(L(UI.run))}</button><button class="btn" data-act="answer" data-k="${k}">${esc(L(UI.answer))}</button></div>
+    <div class="fb" id="fb-${k}" role="status"></div><pre class="out" id="out-${k}" aria-live="polite"></pre>`;
+   }
+   b+=`</div>`;
+  }
+  if(!s.code||s.local)b+=`<div style="margin-top:14px"><button class="btn${isDone?'':' pri'}" data-act="ok" data-k="${k}">${isDone?'✓ ':''}${esc(L(UI.understood))}</button></div>`;
+  return b+`</article>`}).join('');
+ h+=`<div class="pager">${i>0?`<a class="btn" style="display:inline-flex;align-items:center;text-decoration:none" href="#lesson-${i-1}">${esc(L(UI.prev))}</a>`:'<span></span>'}${i<MODS.length-1?`<a class="btn pri" style="display:inline-flex;align-items:center;text-decoration:none" href="#lesson-${i+1}">${esc(L(UI.next))}</a>`:''}</div>`;
+ document.getElementById('lesson').innerHTML=h;renderNav();
+}
+const stepOf=k=>{const [i,j]=k.split('-').map(Number);return {i,j,s:MODS[i].s[j]}};
+
+document.addEventListener('click',async e=>{
+ const btn=e.target.closest('[data-act]');if(!btn)return;
+ const act=btn.dataset.act,k=btn.dataset.k;
+ if(act==='play'){const out=document.getElementById('pout');doRun(out,'',document.getElementById('pta').value,'');return}
+ const {i,j,s}=stepOf(k);
+ const ta=document.getElementById('ta-'+k),fb=document.getElementById('fb-'+k),out=document.getElementById('out-'+k);
+ if(act==='copy'){try{await navigator.clipboard.writeText(s.code);btn.textContent=L(UI.copied);setTimeout(()=>btn.textContent=L(UI.copy),1500)}catch(err){}return}
+ if(act==='ok'){markDone(k);renderLesson(i);return}
+ if(act==='answer'){ta.value=s.code;store.set('typed.'+k,s.code);ta.focus();return}
+ if(act==='check'){const r=check(ta.value,s.code);
+  if(r.ok){fb.className='fb good';fb.textContent='✓ '+L(UI.right);markDone(k);return}
+  fb.className='fb bad';
+  fb.innerHTML=r.msg?esc(r.msg):`${esc(L(UI.wrongLine))} ${r.line}${esc(L(UI.wrongLineSuf))}<br>${esc(L(UI.expected))}<pre>${esc(r.want)}</pre>${esc(L(UI.you))}<pre>${esc(r.got)}</pre>${r.ind?esc(L(UI.spaces)):''}`;return}
+ if(act==='run'){const code=ta.value.trim()?ta.value:s.code;const ok=await doRun(out,prevCode(i,j),code,s.out);
+  if(ok&&ta.value.trim()&&check(ta.value,s.code).ok)markDone(k);}
+});
+document.addEventListener('input',e=>{if(e.target.matches('textarea[data-k]'))store.set('typed.'+e.target.dataset.k,e.target.value);if(e.target.id==='pta')store.set('play',e.target.value);if(e.target.id==='gq')renderGloss(e.target.value)});
+document.addEventListener('keydown',e=>{const t=e.target;if(e.key==='Tab'&&!e.shiftKey&&t.matches('textarea.code')){e.preventDefault();const a=t.selectionStart;t.setRangeText('    ',a,t.selectionEnd,'end');t.dispatchEvent(new Event('input',{bubbles:true}))}
+ else if(e.key==='Enter'&&t.matches('textarea.code')&&!e.ctrlKey&&!e.metaKey){const a=t.selectionStart,before=t.value.slice(0,a),line=before.slice(before.lastIndexOf('\n')+1);let ind=line.match(/^ */)[0];if(/:\s*$/.test(line))ind+='    ';if(ind){e.preventDefault();t.setRangeText('\n'+ind,a,t.selectionEnd,'end');t.dispatchEvent(new Event('input',{bubbles:true}))}}
+ else if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&t.matches('textarea.code')){e.preventDefault();const b=t.id==='pta'?document.querySelector('[data-act=play]'):document.querySelector(`[data-act=run][data-k="${t.dataset.k}"]`);b&&b.click()}});
+
+/* ---------- other views ---------- */
+function renderPlay(){
+ const v=document.getElementById('v-playground');
+ const start=store.get('play')||`# Change anything and press Run (Ctrl+Enter)\nname = "Sathi"\nfor i in range(3):\n    print(f"{i + 1}. Hello from {name}!")`;
+ v.innerHTML=`<h2>${esc(L(UI.playH))}</h2><p class="lead">${esc(L(UI.playP))}</p><div class="box"><textarea class="code" id="pta" spellcheck="false" rows="14" style="border-top:0">${esc(start)}</textarea><div class="btns"><button class="btn pri" data-act="play">▶ ${esc(L(UI.run))}</button></div><pre class="out" id="pout" aria-live="polite"></pre></div>`;
+}
+function renderGloss(q=''){
+ const v=document.getElementById('v-glossary');
+ if(!v.querySelector('#gq'))v.innerHTML=`<h2>${esc(L(UI.glossH))}</h2><input class="search" id="gq" type="search" placeholder="${esc(L(UI.search))}" aria-label="${esc(L(UI.search))}"><div class="gl" id="gl"></div>`;
+ const s=q.trim().toLowerCase();
+ const list=GLOSS.filter(g=>!s||[...Object.values(g.w),...Object.values(g.d)].join(' ').toLowerCase().includes(s));
+ const others=g=>['en','ne','zh'].filter(x=>x!==lang).map(x=>g.w[x]).filter((x,ix,a)=>x!==g.w[lang]&&a.indexOf(x)===ix).join(' · ');
+ document.getElementById('gl').innerHTML=list.map(g=>`<article><h3>${esc(L(g.w))}</h3><p class="alt">${esc(others(g))}</p><p>${esc(L(g.d))}</p></article>`).join('');
+}
+function renderRes(){
+ document.getElementById('v-resources').innerHTML=`<h2>${esc(L(UI.resH))}</h2><p class="lead">${esc(L(UI.resP))}</p><div class="res">${RES.map(([h,items])=>`<h3>${esc(L(h))}</h3>`+items.map(r=>`<a href="${r.u}" target="_blank" rel="noopener"><b>${esc(r.t)}</b><small>${esc(r.u.replace(/^https:\/\//,''))}</small>${esc(L(r.d))}</a>`).join('')).join('')}</div>`;
+}
+
+/* ---------- routing + language ---------- */
+function route(){
+ const h=location.hash.slice(1)||'lesson-0';let tab='lesson';
+ if(h==='playground'||h==='glossary'||h==='resources')tab=h;
+ for(const id of ['lesson','playground','glossary','resources'])document.getElementById('v-'+id).hidden=id!==tab;
+ for(const a of document.querySelectorAll('.tabs a')){a.toggleAttribute('aria-current',a.dataset.tab===tab);if(a.dataset.tab===tab)a.setAttribute('aria-current','page')}
+ document.querySelector('.tabs a[data-tab=lesson]').href='#lesson-'+cur;
+ if(tab==='lesson'){const n=Math.min(MODS.length-1,Math.max(0,parseInt(h.split('-')[1])||0));renderLesson(n);document.querySelector('.tabs a[data-tab=lesson]').href='#lesson-'+n}
+ if(tab==='playground'&&!document.getElementById('pta'))renderPlay();
+ if(tab==='glossary')renderGloss(document.getElementById('gq')?.value||'');
+ if(tab==='resources')renderRes();
+}
+function setLang(l){
+ lang=l;store.set('lang',l);document.documentElement.lang=l==='zh'?'zh-Hans':l;
+ for(const b of document.querySelectorAll('[data-lang]'))b.setAttribute('aria-pressed',b.dataset.lang===l);
+ for(const el of document.querySelectorAll('[data-ui]'))el.textContent=L(UI[el.dataset.ui]);
+ drawPic();renderSwatches();
+ document.getElementById('v-playground').innerHTML='';document.getElementById('v-glossary').innerHTML='';
+ route();
+}
+for(const b of document.querySelectorAll('[data-lang]'))b.addEventListener('click',()=>setLang(b.dataset.lang));
+window.addEventListener('hashchange',()=>{route();if(location.hash.startsWith('#lesson'))document.getElementById('lesson').scrollIntoView({block:'start'})});
+setLang(lang);updProg();
+}
+</script>
+</body>
+</html>
